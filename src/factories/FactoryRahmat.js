@@ -26,7 +26,7 @@ function FactoryRahmat() {
    
          {showModal && (
            <RequestModal
-             factoryName="IBMO (Magomed)"
+             factoryName="Rahmat"
              onClose={() => setShowModal(false)}
            />
          )}

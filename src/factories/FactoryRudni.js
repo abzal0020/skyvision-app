@@ -26,7 +26,7 @@ function FactoryRudni() {
       
             {showModal && (
               <RequestModal
-                factoryName="IBMO (Magomed)"
+                factoryName="Organicum Bio"
                 onClose={() => setShowModal(false)}
               />
             )}

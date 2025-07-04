@@ -26,7 +26,7 @@ function FactoryBestKostanai() {
       
             {showModal && (
               <RequestModal
-                factoryName="IBMO (Magomed)"
+                factoryName="BestKostanai"
                 onClose={() => setShowModal(false)}
               />
             )}

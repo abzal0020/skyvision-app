@@ -26,7 +26,7 @@ function FactoryVadisa() {
       
             {showModal && (
               <RequestModal
-                factoryName="IBMO (Magomed)"
+                factoryName="Vadisa"
                 onClose={() => setShowModal(false)}
               />
             )}

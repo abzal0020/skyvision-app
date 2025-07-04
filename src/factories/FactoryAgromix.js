@@ -26,7 +26,7 @@ function FactoryAgromix() {
       
             {showModal && (
               <RequestModal
-                factoryName="IBMO (Magomed)"
+                factoryName="Agromix"
                 onClose={() => setShowModal(false)}
               />
             )}

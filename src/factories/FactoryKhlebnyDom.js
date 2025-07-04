@@ -26,7 +26,7 @@ function FactoryKhlebnyDom() {
       
             {showModal && (
               <RequestModal
-                factoryName="IBMO (Magomed)"
+                factoryName="KhlebnyDom"
                 onClose={() => setShowModal(false)}
               />
             )}

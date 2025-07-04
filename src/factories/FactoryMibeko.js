@@ -26,7 +26,7 @@ function FactoryMibeko() {
      
            {showModal && (
              <RequestModal
-               factoryName="IBMO (Magomed)"
+               factoryName="Mibeko"
                onClose={() => setShowModal(false)}
              />
            )}
