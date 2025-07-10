@@ -116,24 +116,16 @@ export default function Prices() {
         </div>
 
         {/* таблица */}
-        <div style={{ overflowX: "auto" }}>
-          <table style={table}>
+        <div className="tableWrap">
+          <table className="priceTable">
             <thead>
               <tr>
-                <th style={th} onClick={() => toggleSort("city")}>
-                  Город {sortIcon("city")}
-                </th>
+                <th style={th} onClick={() => toggleSort("city")}>Город {sortIcon("city")}</th>
                 <th style={th}>Завод</th>
-                <th style={th} onClick={() => toggleSort("price")}>
-                  Склад $ {sortIcon("price")}
-                </th>
+                <th style={th} onClick={() => toggleSort("price")}>Склад $ {sortIcon("price")}</th>
                 <th style={th}>Логистика</th>
-                <th style={th} onClick={() => toggleSort("dap")}>
-                  DAP $ {sortIcon("dap")}
-                </th>
-                <th style={th} onClick={() => toggleSort("rating")}>
-                  ★ {sortIcon("rating")}
-                </th>
+                <th style={th} onClick={() => toggleSort("dap")}>DAP $ {sortIcon("dap")}</th>
+                <th style={th} onClick={() => toggleSort("rating")}>★ {sortIcon("rating")}</th>
               </tr>
             </thead>
             <tbody>
@@ -190,7 +182,6 @@ const select = {
   fontSize: 14,
 };
 
-const table = { width: "100%", borderCollapse: "collapse" };
 const th = {
   background: "#000080",
   color: "#fff",

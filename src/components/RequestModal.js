@@ -49,9 +49,12 @@ function RequestModal({ factoryName, onClose }) {
 
   /* ---------------- UI ---------------- */
   return (
+    
     <div style={styles.backdrop} onClick={onClose}>
       <div style={styles.modal} onClick={e => e.stopPropagation()}>
         <h2 style={styles.title}>Заявка • {factoryName}</h2>
+        <div style={styles.modal} className="modalMobileFix" onClick={e=>e.stopPropagation()}></div>
+        
 
         {/* индикатор шагов */}
         <div style={styles.stepsBar}>
