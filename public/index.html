@@ -1,14 +1,39 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
+
+    <!-- Иконка вкладки -->
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+
+    <!-- Адаптивная вёрстка для мобильных и десктопов -->
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Цвет темы браузера (Chrome, Edge, мобильные) -->
+    <meta name="theme-color" content="#000000" />
+
+    <!-- iOS/Android shortcut-иконка -->
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+
+    <!--
+      manifest.json хранит данные PWA-приложения,
+      чтобы при установке на устройство иконка, название и цвета были корректны.
+      Подробнее: https://developers.google.com/web/fundamentals/web-app-manifest/
+    -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <title>Skyvision App</title>
+
+    <title>React App</title>
   </head>
   <body>
-    <noscript>Вам нужно включить JavaScript, чтобы запустить это приложение.</noscript>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
+    <!--
+      Этот файл — шаблон.
+      При прямом открытии его в браузере будет пустая страница.
+
+      Шрифты, дополнительные мета-теги или аналитика добавляются сюда,
+      а скрипты сборки React будут автоматически вставлены
+      внутрь тега <body> после команды `npm run build`.
+    -->
   </body>
 </html>
