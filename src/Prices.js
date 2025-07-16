@@ -1,29 +1,30 @@
 /* src/Prices.js */
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
   FaSort, FaSortUp, FaSortDown, FaStar, FaCity, 
   FaIndustry, FaWarehouse, FaShippingFast, FaDollarSign, 
-  FaChartLine, FaPhone, FaBox, FaMoneyBillWave, FaShoppingCart
+  FaChartLine, FaPhone, FaBox, FaMoneyBillWave, FaShoppingCart,
+  FaBars, FaTimes
 } from "react-icons/fa";
 
 const logistics = 32;
 const rawData = [
-  { city: "Костанай", factory: "Agrodan KsT", price: 215, rating: 4.3, minOrder: 20, payment: "50% предоплата" },
-  { city: "Костанай", factory: "Mibeko", price: 215, rating: 4.1, minOrder: 25, payment: "30% предоплата" },
-  { city: "Костанай", factory: "Khlebny Dom", price: 215, rating: 4.7, minOrder: 15, payment: "100% предоплата" },
-  { city: "Костанай", factory: "Rahmat", price: 215, rating: 4.0, minOrder: 20, payment: "70% предоплата" },
-  { city: "Костанай", factory: "IBMO (Magomed)", price: 210, rating: 3.8, minOrder: 30, payment: "50% предоплата" },
-  { city: "Рудный", factory: "Rudni (Marat)", price: 220, rating: 4.9, minOrder: 15, payment: "30% предоплата" },
-  { city: "Костанай", factory: "Brothers Agro", price: 215, rating: 4.4, minOrder: 20, payment: "50% предоплата" },
-  { city: "Костанай", factory: "Agroplanet", price: 217, rating: 4.5, minOrder: 25, payment: "60% предоплата" },
-  { city: "Костанай", factory: "Romana", price: 215, rating: 4.5, minOrder: 20, payment: "40% предоплата" },
-  { city: "Костанай", factory: "Best Kostanai (malik)", price: 215, rating: 4.2, minOrder: 30, payment: "50% предоплата" },
-  { city: "Костанай", factory: "Vadisa m", price: 215, rating: 4.4, minOrder: 20, payment: "50% предоплата" },
-  { city: "Костанай", factory: "Harvest (Azamat)", price: 225, rating: 4.7, minOrder: 15, payment: "100% предоплата" },
-  { city: "Костанай", factory: "Agromix", price: 210, rating: 4.7, minOrder: 20, payment: "50% предоплата" },
-  { city: "Костанай", factory: "Shahristan agro", price: 225, rating: 4.0, minOrder: 25, payment: "70% предоплата" },
-  { city: "Костанай", factory: "Agrofood export", price: 225, rating: 4.8, minOrder: 20, payment: "50% предоплата" },
+  { city: "Костанай", factory: "Agrodan KsT", price: 215, rating: 4.3, minOrder: 20, payment: "50% предоплата", phone: "+7 (7142) 12-34-56" },
+  { city: "Костанай", factory: "Mibeko", price: 215, rating: 4.1, minOrder: 25, payment: "30% предоплата", phone: "+7 (7142) 23-45-67" },
+  { city: "Костанай", factory: "Khlebny Dom", price: 215, rating: 4.7, minOrder: 15, payment: "100% предоплата", phone: "+7 (7142) 34-56-78" },
+  { city: "Костанай", factory: "Rahmat", price: 215, rating: 4.0, minOrder: 20, payment: "70% предоплата", phone: "+7 (7142) 45-67-89" },
+  { city: "Костанай", factory: "IBMO (Magomed)", price: 210, rating: 3.8, minOrder: 30, payment: "50% предоплата", phone: "+7 (7142) 56-78-90" },
+  { city: "Рудный", factory: "Rudni (Marat)", price: 220, rating: 4.9, minOrder: 15, payment: "30% предоплата", phone: "+7 (7142) 67-89-01" },
+  { city: "Костанай", factory: "Brothers Agro", price: 215, rating: 4.4, minOrder: 20, payment: "50% предоплата", phone: "+7 (7142) 78-90-12" },
+  { city: "Костанай", factory: "Agroplanet", price: 217, rating: 4.5, minOrder: 25, payment: "60% предоплата", phone: "+7 (7142) 89-01-23" },
+  { city: "Костанай", factory: "Romana", price: 215, rating: 4.5, minOrder: 20, payment: "40% предоплата", phone: "+7 (7142) 90-12-34" },
+  { city: "Костанай", factory: "Best Kostanai (malik)", price: 215, rating: 4.2, minOrder: 30, payment: "50% предоплата", phone: "+7 (7142) 01-23-45" },
+  { city: "Костанай", factory: "Vadisa m", price: 215, rating: 4.4, minOrder: 20, payment: "50% предоплата", phone: "+7 (7142) 12-34-56" },
+  { city: "Костанай", factory: "Harvest (Azamat)", price: 225, rating: 4.7, minOrder: 15, payment: "100% предоплата", phone: "+7 (7142) 23-45-67" },
+  { city: "Костанай", factory: "Agromix", price: 210, rating: 4.7, minOrder: 20, payment: "50% предоплата", phone: "+7 (7142) 34-56-78" },
+  { city: "Костанай", factory: "Shahristan agro", price: 225, rating: 4.0, minOrder: 25, payment: "70% предоплата", phone: "+7 (7142) 45-67-89" },
+  { city: "Костанай", factory: "Agrofood export", price: 225, rating: 4.8, minOrder: 20, payment: "50% предоплата", phone: "+7 (7142) 56-78-90" },
 ];
 
 const links = {
@@ -50,6 +51,17 @@ export default function Prices() {
   const [expandedRow, setExpandedRow] = useState(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [selectedFactory, setSelectedFactory] = useState("");
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [showFilters, setShowFilters] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const filtered = useMemo(
     () => rawData.filter(r => filterCity === "Все" || r.city === filterCity),
@@ -79,9 +91,15 @@ export default function Prices() {
     setExpandedRow(expandedRow === index ? null : index);
   };
 
-  const handleOrderClick = (factoryName) => {
+  const handleOrderClick = (factoryName, e) => {
+    e.stopPropagation();
     setSelectedFactory(factoryName);
     setShowOrderModal(true);
+  };
+
+  const makeCall = (phoneNumber, e) => {
+    e.stopPropagation();
+    window.location.href = `tel:${phoneNumber.replace(/[^\d+]/g, '')}`;
   };
 
   return (
@@ -92,71 +110,118 @@ export default function Prices() {
       </div>
 
       <div style={cardStyle}>
-        <div style={controlsStyle}>
-          <div style={filterGroupStyle}>
-            <label style={labelStyle}><FaCity /> Город:</label>
-            <div style={selectWrapperStyle}>
-              <select 
-                style={selectStyle} 
-                value={filterCity} 
-                onChange={e => setCity(e.target.value)}
-              >
-                <option value="Все">Все города</option>
-                {[...new Set(rawData.map(r => r.city))].map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+        {isMobile ? (
+          <>
+            <button 
+              style={mobileFilterButtonStyle}
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              {showFilters ? <FaTimes /> : <FaBars />} Фильтры
+            </button>
+            {showFilters && (
+              <div style={mobileFiltersStyle}>
+                <div style={filterGroupStyle}>
+                  <label style={labelStyle}><FaCity /> Город:</label>
+                  <div style={selectWrapperStyle}>
+                    <select 
+                      style={selectStyle} 
+                      value={filterCity} 
+                      onChange={e => setCity(e.target.value)}
+                    >
+                      <option value="Все">Все города</option>
+                      {[...new Set(rawData.map(r => r.city))].map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
 
-          <div style={filterGroupStyle}>
-            <label style={labelStyle}><FaChartLine /> Сортировка:</label>
-            <div style={selectWrapperStyle}>
-              <select
-                style={selectStyle}
-                value={sort.field}
-                onChange={e => setSort(prev => ({...prev, field: e.target.value}))}
-              >
-                <option value="dap">DAP цена</option>
-                <option value="price">Складская цена</option>
-                <option value="rating">Рейтинг</option>
-              </select>
+                <div style={filterGroupStyle}>
+                  <label style={labelStyle}><FaChartLine /> Сортировка:</label>
+                  <div style={selectWrapperStyle}>
+                    <select
+                      style={selectStyle}
+                      value={sort.field}
+                      onChange={e => setSort(prev => ({...prev, field: e.target.value}))}
+                    >
+                      <option value="dap">DAP цена</option>
+                      <option value="price">Складская цена</option>
+                      <option value="rating">Рейтинг</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <div style={controlsStyle}>
+            <div style={filterGroupStyle}>
+              <label style={labelStyle}><FaCity /> Город:</label>
+              <div style={selectWrapperStyle}>
+                <select 
+                  style={selectStyle} 
+                  value={filterCity} 
+                  onChange={e => setCity(e.target.value)}
+                >
+                  <option value="Все">Все города</option>
+                  {[...new Set(rawData.map(r => r.city))].map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div style={filterGroupStyle}>
+              <label style={labelStyle}><FaChartLine /> Сортировка:</label>
+              <div style={selectWrapperStyle}>
+                <select
+                  style={selectStyle}
+                  value={sort.field}
+                  onChange={e => setSort(prev => ({...prev, field: e.target.value}))}
+                >
+                  <option value="dap">DAP цена</option>
+                  <option value="price">Складская цена</option>
+                  <option value="rating">Рейтинг</option>
+                </select>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         <div style={tableContainerStyle}>
-          <table style={tableStyle}>
+          <table style={isMobile ? mobileTableStyle : tableStyle}>
             <thead>
               <tr>
                 <th style={thStyle} onClick={() => toggleSort("city")}>
                   <div style={thContentStyle}>
-                    <FaCity /> Город {sortIcon("city")}
+                    {!isMobile && <FaCity />} {isMobile ? 'Город' : 'Город'} {sortIcon("city")}
                   </div>
                 </th>
                 <th style={thStyle}>
                   <div style={thContentStyle}>
-                    <FaIndustry /> Завод
+                    {!isMobile && <FaIndustry />} {isMobile ? 'Завод' : 'Завод'}
                   </div>
                 </th>
                 <th style={thStyle} onClick={() => toggleSort("price")}>
                   <div style={thContentStyle}>
-                    <FaWarehouse /> Склад $ {sortIcon("price")}
+                    {!isMobile && <FaWarehouse />} {isMobile ? 'Склад $' : 'Склад $'} {sortIcon("price")}
                   </div>
                 </th>
-                <th style={thStyle}>
-                  <div style={thContentStyle}>
-                    <FaShippingFast /> Логистика
-                  </div>
-                </th>
+                {!isMobile && (
+                  <th style={thStyle}>
+                    <div style={thContentStyle}>
+                      <FaShippingFast /> Логистика
+                    </div>
+                  </th>
+                )}
                 <th style={{...thStyle, background: "#2c3e50"}} onClick={() => toggleSort("dap")}>
                   <div style={{...thContentStyle, color: "white"}}>
-                    <FaDollarSign /> DAP $ {sortIcon("dap")}
+                    {!isMobile && <FaDollarSign />} {isMobile ? 'DAP $' : 'DAP $'} {sortIcon("dap")}
                   </div>
                 </th>
                 <th style={thStyle} onClick={() => toggleSort("rating")}>
                   <div style={thContentStyle}>
-                    <FaStar /> Рейтинг {sortIcon("rating")}
+                    {!isMobile && <FaStar />} {isMobile ? '★' : 'Рейтинг'} {sortIcon("rating")}
                   </div>
                 </th>
               </tr>
@@ -181,14 +246,14 @@ export default function Prices() {
                       <td style={tdStyle}>
                         {links[r.factory] ? (
                           <Link to={links[r.factory]} style={linkStyle}>
-                            {r.factory}
+                            {isMobile ? r.factory.split(' ')[0] : r.factory}
                           </Link>
                         ) : (
-                          r.factory
+                          isMobile ? r.factory.split(' ')[0] : r.factory
                         )}
                       </td>
                       <td style={tdStyle}>{r.price}</td>
-                      <td style={tdStyle}>{logistics}</td>
+                      {!isMobile && <td style={tdStyle}>{logistics}</td>}
                       <td style={{ 
                         ...tdStyle, 
                         fontWeight: 600, 
@@ -198,24 +263,35 @@ export default function Prices() {
                         {dap} 
                         {best && (
                           <div style={bestBadgeStyle}>
-                            <FaStar /> Лучшая цена
+                            <FaStar /> {isMobile ? 'Лучшая' : 'Лучшая цена'}
                           </div>
                         )}
                       </td>
                       <td style={tdStyle}>
-                        <div style={ratingStyle}>
-                          <div style={ratingBarStyle(r.rating)} />
-                          <span>{r.rating.toFixed(1)}</span>
-                        </div>
+                        {isMobile ? (
+                          r.rating.toFixed(1)
+                        ) : (
+                          <div style={ratingStyle}>
+                            <div style={ratingBarStyle(r.rating)} />
+                            <span>{r.rating.toFixed(1)}</span>
+                          </div>
+                        )}
                       </td>
                     </tr>
                     
                     {isExpanded && (
                       <tr style={detailsRowStyle}>
-                        <td colSpan="6" style={detailsCellStyle}>
+                        <td colSpan={isMobile ? 5 : 6} style={detailsCellStyle}>
                           <div style={detailsContentStyle}>
                             <div>
-                              <strong><FaPhone /> Контакты:</strong> +7 (XXX) XXX-XX-XX
+                              <strong><FaPhone /> Контакты:</strong> 
+                              <a 
+                                href={`tel:${r.phone.replace(/[^\d+]/g, '')}`} 
+                                style={phoneLinkStyle}
+                                onClick={(e) => makeCall(r.phone, e)}
+                              >
+                                {r.phone}
+                              </a>
                             </div>
                             <div>
                               <strong><FaBox /> Мин. партия:</strong> {r.minOrder} тонн
@@ -225,12 +301,9 @@ export default function Prices() {
                             </div>
                             <button 
                               style={orderButtonStyle}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleOrderClick(r.factory);
-                              }}
+                              onClick={(e) => handleOrderClick(r.factory, e)}
                             >
-                              <FaShoppingCart /> Заказать у этого поставщика
+                              <FaShoppingCart /> Заказать у {isMobile ? 'этого' : 'этого поставщика'}
                             </button>
                           </div>
                         </td>
@@ -243,7 +316,7 @@ export default function Prices() {
           </table>
         </div>
 
-        <div style={summaryStyle}>
+        <div style={isMobile ? mobileSummaryStyle : summaryStyle}>
           <div style={summaryItemStyle}>
             <FaStar style={{ color: "#f39c12", marginRight: "0.5rem" }} />
             <strong>Лучшая DAP цена:</strong> {bestDAP} $
@@ -274,15 +347,19 @@ export default function Prices() {
               <input type="tel" style={inputStyle} />
             </div>
             
-            <div style={formGroupStyle}>
-              <label style={formLabelStyle}>Email:</label>
-              <input type="email" style={inputStyle} />
-            </div>
-            
-            <div style={formGroupStyle}>
-              <label style={formLabelStyle}>Количество (тонн):</label>
-              <input type="number" style={inputStyle} min="10" />
-            </div>
+            {!isMobile && (
+              <>
+                <div style={formGroupStyle}>
+                  <label style={formLabelStyle}>Email:</label>
+                  <input type="email" style={inputStyle} />
+                </div>
+                
+                <div style={formGroupStyle}>
+                  <label style={formLabelStyle}>Количество (тонн):</label>
+                  <input type="number" style={inputStyle} min="10" />
+                </div>
+              </>
+            )}
             
             <div style={buttonGroupStyle}>
               <button 
@@ -312,33 +389,33 @@ export default function Prices() {
 const pageStyle = {
   background: "linear-gradient(to bottom, #f8f9fa, #e9ecef)",
   minHeight: "100vh",
-  padding: "2rem 1rem",
+  padding: "1rem",
   fontFamily: "'Roboto', sans-serif",
 };
 
 const headerStyle = {
   textAlign: "center",
-  marginBottom: "2rem",
+  marginBottom: "1rem",
   maxWidth: "800px",
-  margin: "0 auto 2rem",
+  margin: "0 auto 1rem",
 };
 
 const titleStyle = {
-  fontSize: "2.2rem",
+  fontSize: "clamp(1.5rem, 5vw, 2.2rem)",
   color: "#2c3e50",
   marginBottom: "0.5rem",
 };
 
 const subtitleStyle = {
-  fontSize: "1.2rem",
+  fontSize: "clamp(0.9rem, 3vw, 1.2rem)",
   color: "#7f8c8d",
 };
 
 const cardStyle = {
   background: "#fff",
   borderRadius: "12px",
-  boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-  padding: "2rem",
+  boxShadow: "0 5px 15px rgba(0,0,0,0.08)",
+  padding: "1rem",
   maxWidth: "1200px",
   margin: "0 auto",
 };
@@ -346,13 +423,37 @@ const cardStyle = {
 const controlsStyle = {
   display: "flex",
   flexWrap: "wrap",
-  gap: "1.5rem",
-  marginBottom: "2rem",
+  gap: "1rem",
+  marginBottom: "1rem",
+};
+
+const mobileFilterButtonStyle = {
+  background: "#3498db",
+  color: "white",
+  border: "none",
+  padding: "0.5rem 1rem",
+  borderRadius: "6px",
+  cursor: "pointer",
+  fontWeight: "600",
+  marginBottom: "1rem",
+  display: "flex",
+  alignItems: "center",
+  gap: "0.5rem",
+};
+
+const mobileFiltersStyle = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "1rem",
+  marginBottom: "1rem",
+  padding: "1rem",
+  background: "#f8f9fa",
+  borderRadius: "8px",
 };
 
 const filterGroupStyle = {
   flex: "1",
-  minWidth: "250px",
+  minWidth: "150px",
 };
 
 const labelStyle = {
@@ -363,6 +464,7 @@ const labelStyle = {
   display: "flex",
   alignItems: "center",
   gap: "0.5rem",
+  fontSize: "0.9rem",
 };
 
 const selectWrapperStyle = {
@@ -371,61 +473,59 @@ const selectWrapperStyle = {
 
 const selectStyle = {
   width: "100%",
-  padding: "0.8rem 1rem",
-  borderRadius: "8px",
+  padding: "0.6rem 0.8rem",
+  borderRadius: "6px",
   border: "1px solid #ddd",
   backgroundColor: "#fff",
-  fontSize: "1rem",
+  fontSize: "0.9rem",
   appearance: "none",
   cursor: "pointer",
   boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
-  transition: "all 0.3s",
-  ":focus": {
-    borderColor: "#3498db",
-    boxShadow: "0 0 0 3px rgba(52, 152, 219, 0.2)",
-    outline: "none",
-  },
 };
 
 const tableContainerStyle = {
   overflowX: "auto",
   borderRadius: "8px",
   border: "1px solid #eee",
+  marginBottom: "1rem",
+  WebkitOverflowScrolling: "touch",
 };
 
 const tableStyle = {
   width: "100%",
   borderCollapse: "collapse",
   minWidth: "800px",
+  fontSize: "0.95rem",
+};
+
+const mobileTableStyle = {
+  width: "100%",
+  borderCollapse: "collapse",
+  minWidth: "500px",
+  fontSize: "0.85rem",
 };
 
 const thStyle = {
   background: "#f8f9fa",
-  padding: "1rem",
+  padding: "0.8rem",
   textAlign: "left",
   fontWeight: "600",
   color: "#7f8c8d",
   borderBottom: "2px solid #eee",
   cursor: "pointer",
-  transition: "background 0.3s",
-  ":hover": {
-    background: "#e9ecef",
-  },
+  position: "sticky",
+  top: 0,
 };
 
 const thContentStyle = {
   display: "flex",
   alignItems: "center",
-  gap: "0.5rem",
+  gap: "0.3rem",
 };
 
 const trStyle = {
   borderBottom: "1px solid #eee",
   cursor: "pointer",
-  transition: "background 0.3s",
-  ":hover": {
-    background: "#f8f9fa",
-  },
 };
 
 const trAltStyle = {
@@ -437,18 +537,20 @@ const expandedTrStyle = {
 };
 
 const tdStyle = {
-  padding: "1rem",
+  padding: "0.8rem",
+  textAlign: "center",
 };
 
 const linkStyle = {
   color: "#3498db",
   fontWeight: "500",
   textDecoration: "none",
-  transition: "color 0.3s",
-  ":hover": {
-    color: "#2980b9",
-    textDecoration: "underline",
-  },
+};
+
+const phoneLinkStyle = {
+  color: "#3498db",
+  textDecoration: "none",
+  marginLeft: "0.5rem",
 };
 
 const bestBadgeStyle = {
@@ -457,23 +559,24 @@ const bestBadgeStyle = {
   right: "0",
   background: "#27ae60",
   color: "white",
-  fontSize: "0.75rem",
-  padding: "0.2rem 0.5rem",
+  fontSize: "0.7rem",
+  padding: "0.2rem 0.4rem",
   borderRadius: "12px",
   display: "flex",
   alignItems: "center",
   gap: "0.2rem",
+  whiteSpace: "nowrap",
 };
 
 const ratingStyle = {
   display: "flex",
   alignItems: "center",
-  gap: "0.5rem",
+  gap: "0.3rem",
 };
 
 const ratingBarStyle = (rating) => ({
-  width: `${rating * 20}px`,
-  height: "8px",
+  width: `${rating * 15}px`,
+  height: "6px",
   background: "#f39c12",
   borderRadius: "4px",
 });
@@ -487,50 +590,60 @@ const detailsCellStyle = {
 };
 
 const detailsContentStyle = {
-  padding: "1.5rem",
+  padding: "1rem",
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-  gap: "1rem",
+  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+  gap: "0.8rem",
+  fontSize: "0.9rem",
 };
 
 const orderButtonStyle = {
   background: "#3498db",
   color: "white",
   border: "none",
-  padding: "0.8rem 1.5rem",
+  padding: "0.6rem 1rem",
   borderRadius: "6px",
   cursor: "pointer",
   fontWeight: "600",
   transition: "background 0.3s",
   gridColumn: "1 / -1",
-  maxWidth: "300px",
+  maxWidth: "250px",
   margin: "0.5rem auto 0",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   gap: "0.5rem",
-  ":hover": {
-    background: "#2980b9",
-  },
+  fontSize: "0.9rem",
 };
 
 const summaryStyle = {
   display: "flex",
   flexWrap: "wrap",
-  gap: "1.5rem",
-  marginTop: "2rem",
-  paddingTop: "1.5rem",
+  gap: "1rem",
+  marginTop: "1rem",
+  paddingTop: "1rem",
   borderTop: "1px solid #eee",
+};
+
+const mobileSummaryStyle = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "0.8rem",
+  marginTop: "1rem",
+  paddingTop: "1rem",
+  borderTop: "1px solid #eee",
+  fontSize: "0.9rem",
 };
 
 const summaryItemStyle = {
   background: "#f8f9fa",
-  padding: "1rem",
+  padding: "0.8rem",
   borderRadius: "8px",
   flex: "1",
-  minWidth: "250px",
+  minWidth: "150px",
   display: "flex",
   alignItems: "center",
+  fontSize: "0.9rem",
 };
 
 // Стили для модального окна
@@ -545,21 +658,25 @@ const modalOverlayStyle = {
   alignItems: "center",
   justifyContent: "center",
   zIndex: 1000,
+  padding: "1rem",
 };
 
 const modalStyle = {
   backgroundColor: "#fff",
   borderRadius: "8px",
-  padding: "2rem",
-  width: "90%",
+  padding: "1.5rem",
+  width: "100%",
   maxWidth: "500px",
+  maxHeight: "90vh",
+  overflowY: "auto",
   boxShadow: "0 5px 15px rgba(0, 0, 0, 0.3)",
 };
 
 const modalTitleStyle = {
   marginTop: 0,
-  marginBottom: "1.5rem",
+  marginBottom: "1.2rem",
   color: "#2c3e50",
+  fontSize: "1.2rem",
 };
 
 const formGroupStyle = {
@@ -571,47 +688,42 @@ const formLabelStyle = {
   marginBottom: "0.5rem",
   fontWeight: "600",
   color: "#2c3e50",
+  fontSize: "0.9rem",
 };
 
 const inputStyle = {
   width: "100%",
-  padding: "0.75rem",
+  padding: "0.6rem",
   border: "1px solid #ddd",
   borderRadius: "4px",
-  fontSize: "1rem",
+  fontSize: "0.9rem",
 };
 
 const buttonGroupStyle = {
   display: "flex",
   justifyContent: "flex-end",
-  gap: "1rem",
-  marginTop: "1.5rem",
+  gap: "0.8rem",
+  marginTop: "1.2rem",
 };
 
 const cancelButtonStyle = {
   background: "#e74c3c",
   color: "white",
   border: "none",
-  padding: "0.75rem 1.5rem",
+  padding: "0.6rem 1rem",
   borderRadius: "4px",
   cursor: "pointer",
   fontWeight: "600",
-  transition: "background 0.3s",
-  ":hover": {
-    background: "#c0392b",
-  },
+  fontSize: "0.9rem",
 };
 
 const submitButtonStyle = {
   background: "#27ae60",
   color: "white",
   border: "none",
-  padding: "0.75rem 1.5rem",
+  padding: "0.6rem 1rem",
   borderRadius: "4px",
   cursor: "pointer",
   fontWeight: "600",
-  transition: "background 0.3s",
-  ":hover": {
-    background: "#219653",
-  },
+  fontSize: "0.9rem",
 };
