@@ -62,6 +62,24 @@ export const locales = {
         cancel: "Отмена",
         submit: "Отправить заявку"
       }
+    },
+    modal: {
+      title: "Заявка • Оставить заявку",
+      steps: ["Данные", "Дата", "Проверка"],
+      name: "Имя",
+      phone: "Телефон",
+      wechat: "WeChat",
+      city: "Город",
+      cargo: "Груз",
+      station: "Станция",
+      planGU: "План ГУ",
+      date: "Дата погрузки",
+      cancel: "Отмена",
+      back: "Назад",
+      next: "Далее",
+      submit: "Отправить",
+      factory: "Поставщик"
+      
     }
   },
   zh: {
@@ -127,6 +145,23 @@ export const locales = {
         cancel: "取消",
         submit: "提交申请"
       }
+    },
+    modal: {
+      title: "申请 • 提交申请",
+      steps: ["信息", "日期", "确认"],
+      name: "姓名",
+      phone: "电话",
+      wechat: "微信",
+      city: "城市",
+      cargo: "货物",
+      station: "车站",
+      planGU: "GU计划",
+      date: "装载日期",
+      cancel: "取消",
+      back: "返回",
+      next: "下一步",
+      submit: "提交",
+      factory: "供应商"
     }
   }
 };

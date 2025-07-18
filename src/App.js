@@ -167,6 +167,7 @@ function App() {
           <RequestModal 
             factoryName={activeService} 
             onClose={() => setShowModal(false)} 
+             t={t}
           />
         )}
       </div>
