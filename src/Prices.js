@@ -1,51 +1,53 @@
-/* src/Prices.js */
 import React, { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { 
-  FaSort, FaSortUp, FaSortDown, FaStar, FaCity, 
-  FaIndustry, FaWarehouse, FaShippingFast, FaDollarSign, 
-  FaChartLine, FaPhone, FaBox, FaMoneyBillWave, FaShoppingCart,
-  FaBars, FaTimes
+import {
+  FaSort, FaSortUp, FaSortDown,
+  FaCity, FaIndustry, FaWarehouse, FaShippingFast, FaDollarSign,
+  FaChartLine, FaBox, FaMoneyBillWave, FaShoppingCart, FaBars, FaTimes
 } from "react-icons/fa";
 
-const logistics = 32;
-const rawData = [
-  { city: "Костанай", factory: "Agrodan KsT", price: 215, rating: 4.3, minOrder: 20, payment: "50% предоплата", phone: "+7 (7142) 12-34-56" },
-  { city: "Костанай", factory: "Mibeko", price: 215, rating: 4.1, minOrder: 25, payment: "30% предоплата", phone: "+7 (7142) 23-45-67" },
-  { city: "Костанай", factory: "Khlebny Dom", price: 215, rating: 4.7, minOrder: 15, payment: "100% предоплата", phone: "+7 (7142) 34-56-78" },
-  { city: "Костанай", factory: "Rahmat", price: 215, rating: 4.0, minOrder: 20, payment: "70% предоплата", phone: "+7 (7142) 45-67-89" },
-  { city: "Костанай", factory: "IBMO (Magomed)", price: 210, rating: 3.8, minOrder: 30, payment: "50% предоплата", phone: "+7 (7142) 56-78-90" },
-  { city: "Рудный", factory: "Rudni (Marat)", price: 220, rating: 4.9, minOrder: 15, payment: "30% предоплата", phone: "+7 (7142) 67-89-01" },
-  { city: "Костанай", factory: "Brothers Agro", price: 215, rating: 4.4, minOrder: 20, payment: "50% предоплата", phone: "+7 (7142) 78-90-12" },
-  { city: "Костанай", factory: "Agroplanet", price: 217, rating: 4.5, minOrder: 25, payment: "60% предоплата", phone: "+7 (7142) 89-01-23" },
-  { city: "Костанай", factory: "Romana", price: 215, rating: 4.5, minOrder: 20, payment: "40% предоплата", phone: "+7 (7142) 90-12-34" },
-  { city: "Костанай", factory: "Best Kostanai (malik)", price: 215, rating: 4.2, minOrder: 30, payment: "50% предоплата", phone: "+7 (7142) 01-23-45" },
-  { city: "Костанай", factory: "Vadisa m", price: 215, rating: 4.4, minOrder: 20, payment: "50% предоплата", phone: "+7 (7142) 12-34-56" },
-  { city: "Костанай", factory: "Harvest (Azamat)", price: 225, rating: 4.7, minOrder: 15, payment: "100% предоплата", phone: "+7 (7142) 23-45-67" },
-  { city: "Костанай", factory: "Agromix", price: 210, rating: 4.7, minOrder: 20, payment: "50% предоплата", phone: "+7 (7142) 34-56-78" },
-  { city: "Костанай", factory: "Shahristan agro", price: 225, rating: 4.0, minOrder: 25, payment: "70% предоплата", phone: "+7 (7142) 45-67-89" },
-  { city: "Костанай", factory: "Agrofood export", price: 225, rating: 4.8, minOrder: 20, payment: "50% предоплата", phone: "+7 (7142) 56-78-90" },
-];
+// !!! Обязательно передавай проп t={t} из App.js !!!
+export default function Prices({ t }) {
+  const logistics = 32;
+  const rawData = [
+    { city: "Костанай", factory: "Agrodan KsT", price: 215, minOrder: 20, payment: "50% предоплата" },
+    { city: "Костанай", factory: "Mibeko", price: 215, minOrder: 25, payment: "30% предоплата" },
+    { city: "Костанай", factory: "Khlebny Dom", price: 215, minOrder: 15, payment: "100% предоплата" },
+    { city: "Костанай", factory: "Rahmat", price: 215, minOrder: 20, payment: "70% предоплата" },
+    { city: "Костанай", factory: "IBMO (Magomed)", price: 210, minOrder: 30, payment: "50% предоплата" },
+    { city: "Рудный", factory: "Rudni (Marat)", price: 220, minOrder: 15, payment: "30% предоплата" },
+    { city: "Костанай", factory: "Brothers Agro", price: 215, minOrder: 20, payment: "50% предоплата" },
+    { city: "Костанай", factory: "Agroplanet", price: 217, minOrder: 25, payment: "60% предоплата" },
+    { city: "Костанай", factory: "Romana", price: 215, minOrder: 20, payment: "40% предоплата" },
+    { city: "Костанай", factory: "Best Kostanai (malik)", price: 215, minOrder: 30, payment: "50% предоплата" },
+    { city: "Костанай", factory: "Vadisa m", price: 215, minOrder: 20, payment: "50% предоплата" },
+    { city: "Костанай", factory: "Harvest (Azamat)", price: 225, minOrder: 15, payment: "100% предоплата" },
+    { city: "Костанай", factory: "Agromix", price: 210, minOrder: 20, payment: "50% предоплата" },
+    { city: "Костанай", factory: "Shahristan agro", price: 225, minOrder: 25, payment: "70% предоплата" },
+    { city: "Костанай", factory: "Agrofood export", price: 225, minOrder: 20, payment: "50% предоплата" },
+  ];
 
-const links = {
-  "Agrodan KsT": "/factory/agrodan",
-  "Mibeko": "/factory/mibeko",
-  "Khlebny Dom": "/factory/khlebny-dom",
-  "Rahmat": "/factory/rahmat",
-  "IBMO (Magomed)": "/factory/ibmo",
-  "Rudni (Marat)": "/factory/rudni",
-  "Brothers Agro": "/factory/brothers-agro",
-  "Agroplanet": "/factory/agroplanet",
-  "Romana": "/factory/romana",
-  "Best Kostanai (malik)": "/factory/bestkostanai",
-  "Vadisa m": "/factory/vadisa",
-  "Harvest (Azamat)": "/factory/harvest",
-  "Agromix": "/factory/agromix",
-  "Shahristan agro": "/factory/shahristan",
-  "Agrofood export": "/factory/agrofood",
-};
+  const links = {
+    "Agrodan KsT": "/factory/agrodan",
+    "Mibeko": "/factory/mibeko",
+    "Khlebny Dom": "/factory/khlebny-dom",
+    "Rahmat": "/factory/rahmat",
+    "IBMO (Magomed)": "/factory/ibmo",
+    "Rudni (Marat)": "/factory/rudni",
+    "Brothers Agro": "/factory/brothers-agro",
+    "Agroplanet": "/factory/agroplanet",
+    "Romana": "/factory/romana",
+    "Best Kostanai (malik)": "/factory/bestkostanai",
+    "Vadisa m": "/factory/vadisa",
+    "Harvest (Azamat)": "/factory/harvest",
+    "Agromix": "/factory/agromix",
+    "Shahristan agro": "/factory/shahristan",
+    "Agrofood export": "/factory/agrofood",
+  };
 
-export default function Prices() {
+  // Города на русском из данных, переводим только надписи
+  const cityOptions = ["Все", ...new Set(rawData.map(r => r.city))];
+
   const [filterCity, setCity] = useState("Все");
   const [sort, setSort] = useState({ field: "dap", asc: true });
   const [expandedRow, setExpandedRow] = useState(null);
@@ -55,10 +57,7 @@ export default function Prices() {
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -71,10 +70,8 @@ export default function Prices() {
   const sorted = useMemo(() => {
     const dir = sort.asc ? 1 : -1;
     return [...filtered].sort((a, b) => {
-      const av = sort.field === "dap" ? a.price + logistics : 
-                sort.field === "rating" ? a.rating : a.price;
-      const bv = sort.field === "dap" ? b.price + logistics : 
-                sort.field === "rating" ? b.rating : b.price;
+      const av = sort.field === "dap" ? a.price + logistics : a.price;
+      const bv = sort.field === "dap" ? b.price + logistics : b.price;
       return av > bv ? dir : -dir;
     });
   }, [filtered, sort]);
@@ -87,9 +84,7 @@ export default function Prices() {
   const toggleSort = (field) =>
     setSort(prev => prev.field === field ? { field, asc: !prev.asc } : { field, asc: true });
 
-  const toggleRow = (index) => {
-    setExpandedRow(expandedRow === index ? null : index);
-  };
+  const toggleRow = (index) => setExpandedRow(expandedRow === index ? null : index);
 
   const handleOrderClick = (factoryName, e) => {
     e.stopPropagation();
@@ -97,56 +92,47 @@ export default function Prices() {
     setShowOrderModal(true);
   };
 
-  const makeCall = (phoneNumber, e) => {
-    e.stopPropagation();
-    window.location.href = `tel:${phoneNumber.replace(/[^\d+]/g, '')}`;
-  };
-
   return (
     <div style={pageStyle}>
       <div style={headerStyle}>
-        <h1 style={titleStyle}>Актуальные цены на кормовую муку</h1>
-        <p style={subtitleStyle}>DAP до границы с учетом логистики</p>
+        <h1 style={titleStyle}>{t.prices.title}</h1>
+        <p style={subtitleStyle}>{t.prices.subtitle}</p>
       </div>
-
       <div style={cardStyle}>
         {isMobile ? (
           <>
-            <button 
+            <button
               style={mobileFilterButtonStyle}
               onClick={() => setShowFilters(!showFilters)}
             >
-              {showFilters ? <FaTimes /> : <FaBars />} Фильтры
+              {showFilters ? <FaTimes /> : <FaBars />} {t.prices.filters}
             </button>
             {showFilters && (
               <div style={mobileFiltersStyle}>
                 <div style={filterGroupStyle}>
-                  <label style={labelStyle}><FaCity /> Город:</label>
+                  <label style={labelStyle}><FaCity /> {t.prices.city}:</label>
                   <div style={selectWrapperStyle}>
-                    <select 
-                      style={selectStyle} 
-                      value={filterCity} 
+                    <select
+                      style={selectStyle}
+                      value={filterCity}
                       onChange={e => setCity(e.target.value)}
                     >
-                      <option value="Все">Все города</option>
-                      {[...new Set(rawData.map(r => r.city))].map(c => (
+                      {cityOptions.map(c => (
                         <option key={c} value={c}>{c}</option>
                       ))}
                     </select>
                   </div>
                 </div>
-
                 <div style={filterGroupStyle}>
-                  <label style={labelStyle}><FaChartLine /> Сортировка:</label>
+                  <label style={labelStyle}><FaChartLine /> {t.prices.filters}:</label>
                   <div style={selectWrapperStyle}>
                     <select
                       style={selectStyle}
                       value={sort.field}
-                      onChange={e => setSort(prev => ({...prev, field: e.target.value}))}
+                      onChange={e => setSort(prev => ({ ...prev, field: e.target.value }))}
                     >
-                      <option value="dap">DAP цена</option>
-                      <option value="price">Складская цена</option>
-                      <option value="rating">Рейтинг</option>
+                      <option value="dap">{t.prices.dap}</option>
+                      <option value="price">{t.prices.warehouse}</option>
                     </select>
                   </div>
                 </div>
@@ -156,32 +142,29 @@ export default function Prices() {
         ) : (
           <div style={controlsStyle}>
             <div style={filterGroupStyle}>
-              <label style={labelStyle}><FaCity /> Город:</label>
+              <label style={labelStyle}><FaCity /> {t.prices.city}:</label>
               <div style={selectWrapperStyle}>
-                <select 
-                  style={selectStyle} 
-                  value={filterCity} 
+                <select
+                  style={selectStyle}
+                  value={filterCity}
                   onChange={e => setCity(e.target.value)}
                 >
-                  <option value="Все">Все города</option>
-                  {[...new Set(rawData.map(r => r.city))].map(c => (
+                  {cityOptions.map(c => (
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
               </div>
             </div>
-
             <div style={filterGroupStyle}>
-              <label style={labelStyle}><FaChartLine /> Сортировка:</label>
+              <label style={labelStyle}><FaChartLine /> {t.prices.filters}:</label>
               <div style={selectWrapperStyle}>
                 <select
                   style={selectStyle}
                   value={sort.field}
-                  onChange={e => setSort(prev => ({...prev, field: e.target.value}))}
+                  onChange={e => setSort(prev => ({ ...prev, field: e.target.value }))}
                 >
-                  <option value="dap">DAP цена</option>
-                  <option value="price">Складская цена</option>
-                  <option value="rating">Рейтинг</option>
+                  <option value="dap">{t.prices.dap}</option>
+                  <option value="price">{t.prices.warehouse}</option>
                 </select>
               </div>
             </div>
@@ -194,34 +177,29 @@ export default function Prices() {
               <tr>
                 <th style={thStyle} onClick={() => toggleSort("city")}>
                   <div style={thContentStyle}>
-                    {!isMobile && <FaCity />} {isMobile ? 'Город' : 'Город'} {sortIcon("city")}
+                    {!isMobile && <FaCity />} {t.prices.city} {sortIcon("city")}
                   </div>
                 </th>
                 <th style={thStyle}>
                   <div style={thContentStyle}>
-                    {!isMobile && <FaIndustry />} {isMobile ? 'Завод' : 'Завод'}
+                    {!isMobile && <FaIndustry />} {t.prices.factory}
                   </div>
                 </th>
                 <th style={thStyle} onClick={() => toggleSort("price")}>
                   <div style={thContentStyle}>
-                    {!isMobile && <FaWarehouse />} {isMobile ? 'Склад $' : 'Склад $'} {sortIcon("price")}
+                    {!isMobile && <FaWarehouse />} {t.prices.warehouse} {sortIcon("price")}
                   </div>
                 </th>
                 {!isMobile && (
                   <th style={thStyle}>
                     <div style={thContentStyle}>
-                      <FaShippingFast /> Логистика
+                      <FaShippingFast /> {t.prices.logistics}
                     </div>
                   </th>
                 )}
-                <th style={{...thStyle, background: "#2c3e50"}} onClick={() => toggleSort("dap")}>
-                  <div style={{...thContentStyle, color: "white"}}>
-                    {!isMobile && <FaDollarSign />} {isMobile ? 'DAP $' : 'DAP $'} {sortIcon("dap")}
-                  </div>
-                </th>
-                <th style={thStyle} onClick={() => toggleSort("rating")}>
-                  <div style={thContentStyle}>
-                    {!isMobile && <FaStar />} {isMobile ? '★' : 'Рейтинг'} {sortIcon("rating")}
+                <th style={{ ...thStyle, background: "#2c3e50" }} onClick={() => toggleSort("dap")}>
+                  <div style={{ ...thContentStyle, color: "white" }}>
+                    {!isMobile && <FaDollarSign />} {t.prices.dap} {sortIcon("dap")}
                   </div>
                 </th>
               </tr>
@@ -231,12 +209,11 @@ export default function Prices() {
                 const dap = r.price + logistics;
                 const best = dap === bestDAP;
                 const isExpanded = expandedRow === i;
-                
                 return (
                   <React.Fragment key={r.factory}>
-                    <tr 
-                      style={{ 
-                        ...trStyle, 
+                    <tr
+                      style={{
+                        ...trStyle,
                         ...(i % 2 ? trAltStyle : {}),
                         ...(isExpanded ? expandedTrStyle : {})
                       }}
@@ -254,56 +231,35 @@ export default function Prices() {
                       </td>
                       <td style={tdStyle}>{r.price}</td>
                       {!isMobile && <td style={tdStyle}>{logistics}</td>}
-                      <td style={{ 
-                        ...tdStyle, 
-                        fontWeight: 600, 
+                      <td style={{
+                        ...tdStyle,
+                        fontWeight: 600,
                         color: best ? "#27ae60" : "#2c3e50",
                         position: "relative"
                       }}>
-                        {dap} 
+                        {dap}
                         {best && (
                           <div style={bestBadgeStyle}>
-                            <FaStar /> {isMobile ? 'Лучшая' : 'Лучшая цена'}
-                          </div>
-                        )}
-                      </td>
-                      <td style={tdStyle}>
-                        {isMobile ? (
-                          r.rating.toFixed(1)
-                        ) : (
-                          <div style={ratingStyle}>
-                            <div style={ratingBarStyle(r.rating)} />
-                            <span>{r.rating.toFixed(1)}</span>
+                            <span style={{ marginRight: 4 }}><FaDollarSign /></span> {t.prices.best}
                           </div>
                         )}
                       </td>
                     </tr>
-                    
                     {isExpanded && (
                       <tr style={detailsRowStyle}>
-                        <td colSpan={isMobile ? 5 : 6} style={detailsCellStyle}>
+                        <td colSpan={isMobile ? 4 : 5} style={detailsCellStyle}>
                           <div style={detailsContentStyle}>
                             <div>
-                              <strong><FaPhone /> Контакты:</strong> 
-                              <a 
-                                href={`tel:${r.phone.replace(/[^\d+]/g, '')}`} 
-                                style={phoneLinkStyle}
-                                onClick={(e) => makeCall(r.phone, e)}
-                              >
-                                {r.phone}
-                              </a>
+                              <strong><FaBox /> {t.prices.minOrder}:</strong> {r.minOrder} {t.prices.amountUnit || "тонн"}
                             </div>
                             <div>
-                              <strong><FaBox /> Мин. партия:</strong> {r.minOrder} тонн
+                              <strong><FaMoneyBillWave /> {t.prices.payment}:</strong> {r.payment}
                             </div>
-                            <div>
-                              <strong><FaMoneyBillWave /> Оплата:</strong> {r.payment}
-                            </div>
-                            <button 
+                            <button
                               style={orderButtonStyle}
                               onClick={(e) => handleOrderClick(r.factory, e)}
                             >
-                              <FaShoppingCart /> Заказать у {isMobile ? 'этого' : 'этого поставщика'}
+                              <FaShoppingCart /> {t.prices.orderBtn}
                             </button>
                           </div>
                         </td>
@@ -318,12 +274,12 @@ export default function Prices() {
 
         <div style={isMobile ? mobileSummaryStyle : summaryStyle}>
           <div style={summaryItemStyle}>
-            <FaStar style={{ color: "#f39c12", marginRight: "0.5rem" }} />
-            <strong>Лучшая DAP цена:</strong> {bestDAP} $
+            <FaDollarSign style={{ color: "#27ae60", marginRight: "0.5rem" }} />
+            <strong>{t.prices.best}:</strong> {bestDAP} $
           </div>
           <div style={summaryItemStyle}>
             <FaChartLine style={{ color: "#3498db", marginRight: "0.5rem" }} />
-            <strong>Средняя цена:</strong> 
+            <strong>{t.prices.avg}:</strong>
             {(rawData.reduce((sum, r) => sum + r.price, 0) / rawData.length + logistics).toFixed(1)} $
           </div>
         </div>
@@ -334,48 +290,43 @@ export default function Prices() {
         <div style={modalOverlayStyle}>
           <div style={modalStyle}>
             <h3 style={modalTitleStyle}>
-              Заказ у поставщика: {selectedFactory}
+              {t.prices.modal.order}: {selectedFactory}
             </h3>
-            
             <div style={formGroupStyle}>
-              <label style={formLabelStyle}>Ваше имя:</label>
+              <label style={formLabelStyle}>{t.prices.modal.name}:</label>
               <input type="text" style={inputStyle} />
             </div>
-            
             <div style={formGroupStyle}>
-              <label style={formLabelStyle}>Телефон:</label>
+              <label style={formLabelStyle}>{t.prices.modal.phone}:</label>
               <input type="tel" style={inputStyle} />
             </div>
-            
             {!isMobile && (
               <>
                 <div style={formGroupStyle}>
-                  <label style={formLabelStyle}>Email:</label>
+                  <label style={formLabelStyle}>{t.prices.modal.email}:</label>
                   <input type="email" style={inputStyle} />
                 </div>
-                
                 <div style={formGroupStyle}>
-                  <label style={formLabelStyle}>Количество (тонн):</label>
+                  <label style={formLabelStyle}>{t.prices.modal.amount}:</label>
                   <input type="number" style={inputStyle} min="10" />
                 </div>
               </>
             )}
-            
             <div style={buttonGroupStyle}>
-              <button 
+              <button
                 style={cancelButtonStyle}
                 onClick={() => setShowOrderModal(false)}
               >
-                Отмена
+                {t.prices.modal.cancel}
               </button>
-              <button 
+              <button
                 style={submitButtonStyle}
                 onClick={() => {
-                  alert(`Заказ на ${selectedFactory} отправлен!`);
+                  alert(`${t.prices.modal.order} ${selectedFactory} отправлен!`);
                   setShowOrderModal(false);
                 }}
               >
-                Отправить заявку
+                {t.prices.modal.submit}
               </button>
             </div>
           </div>
@@ -385,7 +336,7 @@ export default function Prices() {
   );
 }
 
-// Стили
+// Все стили оставляй как есть, они идут ниже:
 const pageStyle = {
   background: "linear-gradient(to bottom, #f8f9fa, #e9ecef)",
   minHeight: "100vh",
@@ -568,19 +519,6 @@ const bestBadgeStyle = {
   whiteSpace: "nowrap",
 };
 
-const ratingStyle = {
-  display: "flex",
-  alignItems: "center",
-  gap: "0.3rem",
-};
-
-const ratingBarStyle = (rating) => ({
-  width: `${rating * 15}px`,
-  height: "6px",
-  background: "#f39c12",
-  borderRadius: "4px",
-});
-
 const detailsRowStyle = {
   background: "#f0f7ff",
 };
@@ -646,7 +584,6 @@ const summaryItemStyle = {
   fontSize: "0.9rem",
 };
 
-// Стили для модального окна
 const modalOverlayStyle = {
   position: "fixed",
   top: 0,
