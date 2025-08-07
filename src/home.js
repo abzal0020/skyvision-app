@@ -23,4 +23,4 @@ function Home({ t, openModal }) {
       <section className="factories-section">{/* ... */}</section>
     </div>
   );
-}
+}   

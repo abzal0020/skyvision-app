@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { FaSearch, FaPhone, FaGlobe } from "react-icons/fa";
-import { locales } from "./locales";
 import Prices from "./Prices";
 import Contact from "./Contact";
 import Agrodan from "./factories/Agrodan";
@@ -21,6 +20,7 @@ import FactoryShahristan from "./factories/FactoryShahristan";
 import FactoryAgrofood from "./factories/FactoryAgrofood";
 import RequestModal from "./components/RequestModal";
 import "./App.css";
+import { locales } from "./locales";
 
 function Home({ t, openModal }) {
   const services = [
@@ -28,6 +28,14 @@ function Home({ t, openModal }) {
     { icon: "🚚", title: t.services.factoryPrices, desc: t.services.factoryPricesDesc },
     { icon: "🌏", title: t.services.intl, desc: t.services.intlDesc }
   ];
+
+  const popularFactories = [
+    { name: "Agrodan", description: t.factories.subtitle },
+    { name: "IBMO", description: t.factories.subtitle },
+    { name: "Mibeko", description: t.factories.subtitle },
+    { name: "Khlebny Dom", description: t.factories.subtitle }
+  ];
+
   return (
     <div>
       <section className="hero-section">
@@ -37,9 +45,12 @@ function Home({ t, openModal }) {
           <button className="btn-main" onClick={() => openModal(t.hero.request)}>
             {t.hero.request}
           </button>
-          <div className="hero-phone"><FaPhone /> {t.hero.phone}</div>
+          <div className="hero-phone">
+            <FaPhone /> {t.hero.phone}
+          </div>
         </div>
       </section>
+
       <section className="services-section">
         <h2 className="section-title">{t.services.title}</h2>
         <div className="services-grid">
@@ -53,6 +64,7 @@ function Home({ t, openModal }) {
           ))}
         </div>
       </section>
+
       <section className="about-section">
         <div className="about-content">
           <div className="about-text">
@@ -69,14 +81,15 @@ function Home({ t, openModal }) {
           </div>
         </div>
       </section>
+
       <section className="factories-section">
         <h2 className="section-title">{t.factories.title}</h2>
-        <p className="factories-subtitle">{t.factories.subtitle}</p>
         <div className="factories-grid">
-          <Link to="/factory/agrodan" className="factory-card">Agrodan</Link>
-          <Link to="/factory/ibmo" className="factory-card">IBMO</Link>
-          <Link to="/factory/mibeko" className="factory-card">Mibeko</Link>
-          <Link to="/factory/khlebny-dom" className="factory-card">Khlebny Dom</Link>
+          {popularFactories.map((factory, idx) => (
+            <Link to={`/factory/${factory.name.toLowerCase()}`} className="factory-card" key={idx}>
+              {factory.name}
+            </Link>
+          ))}
         </div>
       </section>
     </div>
@@ -125,7 +138,7 @@ function App() {
         <main className="main">
           <Routes>
             <Route path="/" element={<Home t={t} openModal={openModal} />} />
-           <Route path="/prices" element={<Prices t={t} />} />
+            <Route path="/prices" element={<Prices t={t} />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/factory/agrodan" element={<Agrodan />} />
             <Route path="/factory/ibmo" element={<IBMO />} />
@@ -149,7 +162,7 @@ function App() {
             <div className="footer-column">
               <div className="footer-heading">{t.footer.contacts}</div>
               <div><FaPhone /> {t.hero.phone}</div>
-              <div><FaGlobe /> www.skyvision.kz</div>
+              <div><FaGlobe /> www.MeiWenti.kz</div>
             </div>
             <div className="footer-column">
               <div className="footer-heading">{t.footer.navigation}</div>
@@ -159,7 +172,7 @@ function App() {
             </div>
           </div>
           <div className="footer-bottom">
-            <span>© 2025 Skyvision. {t.footer.rights}</span>
+            <span>© 2025 MeiWenti. {t.footer.rights}</span>
             <span>{t.footer.dev}</span>
           </div>
         </footer>
@@ -167,11 +180,12 @@ function App() {
           <RequestModal 
             factoryName={activeService} 
             onClose={() => setShowModal(false)} 
-             t={t}
+            t={t}
           />
         )}
       </div>
     </Router>
   );
 }
+
 export default App;
