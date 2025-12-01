@@ -1,6 +1,6 @@
 export const locales = {
   ru: {
-    logo: "MeiWenti",
+    logo: "SKYVISION",
     nav: {
       main: "Главная",
       prices: "Цены",
@@ -37,7 +37,7 @@ export const locales = {
       contacts: "Контакты",
       navigation: "Навигация",
       rights: "Все права защищены.",
-      dev: "Разработка: MeiWenti"
+      dev: "Разработка: SKYVISION"
     },
     prices: {
       title: "Актуальные цены на кормовую муку",
@@ -83,7 +83,7 @@ export const locales = {
     }
   },
   zh: {
-    logo: "MeiWenti",
+    logo: "SKYVISION",
     nav: {
       main: "主页",
       prices: "价格",
@@ -120,7 +120,7 @@ export const locales = {
       contacts: "联系方式",
       navigation: "导航",
       rights: "版权所有。",
-      dev: "开发：MeiWenti"
+      dev: "开发：SKYVISION"
     },
     prices: {
       title: "最新饲料面粉价格",
