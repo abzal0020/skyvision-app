@@ -162,7 +162,7 @@ function App() {
             <div className="footer-column">
               <div className="footer-heading">{t.footer.contacts}</div>
               <div><FaPhone /> {t.hero.phone}</div>
-              <div><FaGlobe /> www.MeiWenti.kz</div>
+              <div><FaGlobe /> www.SKYVISION.kz</div>
             </div>
             <div className="footer-column">
               <div className="footer-heading">{t.footer.navigation}</div>
@@ -172,7 +172,7 @@ function App() {
             </div>
           </div>
           <div className="footer-bottom">
-            <span>© 2025 MeiWenti. {t.footer.rights}</span>
+            <span>© 2025 SKYVISION. {t.footer.rights}</span>
             <span>{t.footer.dev}</span>
           </div>
         </footer>
