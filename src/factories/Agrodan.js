@@ -46,7 +46,7 @@ function FactoryAgrodan() {
         {/* Header */}
         <div style={header}>
           <h1 style={{margin:0}}>Agrodan KsT</h1>
-          <p style={{margin:0, opacity:0.85}}>Костанай · Price DAP 247 $/т</p>
+          <p style={{margin:0, opacity:0.85}}>Костанай · Price DAP 228 $/т</p>
         </div>
 
         <div style={grid}>
@@ -68,9 +68,9 @@ function FactoryAgrodan() {
           <div style={infoCol}>
             <h3>Прайс</h3>
             <ul>
-              <li>💰 Цена со склада: 215 $/т</li>
-              <li>🚚 Логистика + план: 32 $/т</li>
-              <li>🌐 DAP до границы: 247 $/т</li>
+              <li>💰 Цена со склада: 190 $/т</li>
+              <li>🚚 Логистика + план: 38 $/т</li>
+              <li>🌐 DAP до границы: 228 $/т</li>
             </ul>
 
             <h3>Документы</h3>
