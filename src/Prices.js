@@ -13,7 +13,7 @@ export default function Prices({ t }) {
     { city: "Костанай", factory: "Agrodan KsT", price: 190, minOrder: 20, payment: "50% предоплата" },
     { city: "Костанай", factory: "Mibeko", price: 195, minOrder: 25, payment: "50% предоплата" },
     { city: "Костанай", factory: "Khlebny Dom", price: 195, minOrder: 15, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Rahmat", price: 215, minOrder: 20, payment: "70% предоплата" },
+    { city: "Костанай", factory: "Rahmat", price: 190, minOrder: 20, payment: "50% предоплата" },
     { city: "Костанай", factory: "IBMO (Magomed)", price: 185, minOrder: 30, payment: "50% предоплата" },
     { city: "Рудный", factory: "Rudni (Marat)", price: 200, minOrder: 15, payment: "50% предоплата" },
     { city: "Костанай", factory: "Brothers Agro", price: 195, minOrder: 20, payment: "50% предоплата" },
