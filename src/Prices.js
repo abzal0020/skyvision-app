@@ -8,23 +8,23 @@ import {
 
 // !!! Обязательно передавай проп t={t} из App.js !!!
 export default function Prices({ t }) {
-  const logistics = 32;
+  const logistics = 38;
   const rawData = [
-    { city: "Костанай", factory: "Agrodan KsT", price: 215, minOrder: 20, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Mibeko", price: 215, minOrder: 25, payment: "30% предоплата" },
-    { city: "Костанай", factory: "Khlebny Dom", price: 215, minOrder: 15, payment: "100% предоплата" },
+    { city: "Костанай", factory: "Agrodan KsT", price: 190, minOrder: 20, payment: "50% предоплата" },
+    { city: "Костанай", factory: "Mibeko", price: 195, minOrder: 25, payment: "50% предоплата" },
+    { city: "Костанай", factory: "Khlebny Dom", price: 195, minOrder: 15, payment: "50% предоплата" },
     { city: "Костанай", factory: "Rahmat", price: 215, minOrder: 20, payment: "70% предоплата" },
-    { city: "Костанай", factory: "IBMO (Magomed)", price: 210, minOrder: 30, payment: "50% предоплата" },
-    { city: "Рудный", factory: "Rudni (Marat)", price: 220, minOrder: 15, payment: "30% предоплата" },
-    { city: "Костанай", factory: "Brothers Agro", price: 215, minOrder: 20, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Agroplanet", price: 217, minOrder: 25, payment: "60% предоплата" },
-    { city: "Костанай", factory: "Romana", price: 215, minOrder: 20, payment: "40% предоплата" },
-    { city: "Костанай", factory: "Best Kostanai (malik)", price: 215, minOrder: 30, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Vadisa m", price: 215, minOrder: 20, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Harvest (Azamat)", price: 225, minOrder: 15, payment: "100% предоплата" },
-    { city: "Костанай", factory: "Agromix", price: 210, minOrder: 20, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Shahristan agro", price: 225, minOrder: 25, payment: "70% предоплата" },
-    { city: "Костанай", factory: "Agrofood export", price: 225, minOrder: 20, payment: "50% предоплата" },
+    { city: "Костанай", factory: "IBMO (Magomed)", price: 185, minOrder: 30, payment: "50% предоплата" },
+    { city: "Рудный", factory: "Rudni (Marat)", price: 200, minOrder: 15, payment: "50% предоплата" },
+    { city: "Костанай", factory: "Brothers Agro", price: 195, minOrder: 20, payment: "50% предоплата" },
+    { city: "Костанай", factory: "Agroplanet", price: 195, minOrder: 25, payment: "60% предоплата" },
+    { city: "Костанай", factory: "Romana", price: 195, minOrder: 20, payment: "50% предоплата" },
+    { city: "Костанай", factory: "Best Kostanai (malik)", price: 195, minOrder: 30, payment: "50% предоплата" },
+    { city: "Костанай", factory: "Vadisa m", price: 195, minOrder: 20, payment: "50% предоплата" },
+    { city: "Костанай", factory: "Harvest (Azamat)", price: 205, minOrder: 15, payment: "50% предоплата" },
+    { city: "Костанай", factory: "Agromix", price: 195, minOrder: 20, payment: "50% предоплата" },
+    { city: "Костанай", factory: "Shahristan agro", price: 190, minOrder: 25, payment: "50% предоплата" },
+    { city: "Костанай", factory: "Agrofood export", price: 195, minOrder: 20, payment: "50% предоплата" },
   ];
 
   const links = {
