@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import emailjs from "emailjs-com";
 import "./RequestModal.css";
 
-function RequestModal({ factoryName, onClose, t }) { // ← t добавлен!
+function RequestModal({ factoryName, onClose, t }) {
   const [step, setStep] = useState(0);
   const today = new Date().toISOString().split("T")[0];
 
@@ -17,25 +17,58 @@ function RequestModal({ factoryName, onClose, t }) { // ← t добавлен!
     date:    today,
   });
 
+  const [sending, setSending] = useState(false);
+
+  // Инициализация (не всегда обязательна, но полезна)
+  useEffect(() => {
+    try {
+      emailjs.init("5hS_rdfopL-fNCVzY"); // если у вас другой user id - замените
+      // eslint-disable-next-line no-empty
+    } catch (err) {}
+  }, []);
+
   const handle = e => setForm({ ...form, [e.target.name]: e.target.value });
   const next   = () => setStep(s => s + 1);
   const back   = () => setStep(s => s - 1);
 
   const submit = () => {
-    const payload = { ...form, factory: factoryName };
+    const templateParams = {
+      // ВАЖНО: эти ключи должны совпадать с переменными вашего шаблона в EmailJS
+      user_name: form.name,
+      user_phone: form.phone,
+      user_wechat: form.wechat,
+      city: form.city,
+      cargo: form.cargo,
+      station: form.station,
+      planGU: form.planGU,
+      date: form.date,
+      factory: factoryName || "",
+      // добавьте другие поля, если нужно:
+      // notes: form.notes,
+    };
+
+    console.info("EmailJS: отправляю шаблон с параметрами:", templateParams);
+    setSending(true);
 
     emailjs
       .send(
-        "service_mfs129i",
-        "template_vixeuwf",
-        payload,
-        "5hS_rdfopL-fNCVzY"
+        "service_mfs129i",      // <- проверьте service ID
+        "template_vixeuwf",     // <- проверьте template ID
+        templateParams,
+        // можно также передать user id в аргументах send, но мы инициализировали выше
+        // "5hS_rdfopL-fNCVzY"
       )
-      .then(() => {
+      .then((response) => {
+        console.info("EmailJS: ответ сервера:", response);
         alert("✅ Заявка отправлена! Скоро свяжемся.");
+        setSending(false);
         onClose();
       })
-      .catch(() => alert("Ошибка отправки, попробуйте позже."));
+      .catch((err) => {
+        console.error("EmailJS: ошибка при отправке:", err);
+        alert("Ошибка отправки, попробуйте позже. Проверьте консоль для деталей.");
+        setSending(false);
+      });
   };
 
   const canNext = () => {
@@ -79,7 +112,6 @@ function RequestModal({ factoryName, onClose, t }) { // ← t добавлен!
             <select name="planGU" value={form.planGU}  onChange={handle} className="rm-input">
               <option>с планом ГУ</option><option>без плана</option>
             </select>
-            
           </form>
         )}
 
@@ -109,7 +141,7 @@ function RequestModal({ factoryName, onClose, t }) { // ← t добавлен!
           <button onClick={onClose} className="rm-btn rm-btn-grey" type="button">{t.modal.cancel}</button>
           {step>0   && <button onClick={back}   className="rm-btn rm-btn-grey" type="button">{t.modal.back}</button>}
           {step<2   && <button onClick={next}   disabled={!canNext()} className="rm-btn rm-btn-blue" type="button">{t.modal.next}</button>}
-          {step===2 && <button onClick={submit} className="rm-btn rm-btn-blue" type="button">{t.modal.submit}</button>}
+          {step===2 && <button onClick={submit} disabled={sending} className="rm-btn rm-btn-blue" type="button">{sending ? "Отправка..." : t.modal.submit}</button>}
         </div>
       </div>
     </div>
