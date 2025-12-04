@@ -1,5 +1,5 @@
-// src/components/RequestForm.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import emailjs from "emailjs-com";
 
 function RequestForm({ factoryName }) {
   const [formData, setFormData] = useState({
@@ -7,6 +7,13 @@ function RequestForm({ factoryName }) {
     phone: "",
     comment: "",
   });
+  const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    try {
+      emailjs.init("5hS_rdfopL-fNCVzY");
+    } catch (err) {}
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -14,10 +21,31 @@ function RequestForm({ factoryName }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Здесь будет логика отправки (можно на почту, Telegram, или в консоль)
-    console.log("Заявка отправлена:", { ...formData, factory: factoryName });
-    alert("Заявка отправлена!");
-    setFormData({ name: "", phone: "", comment: "" });
+
+    const templateParams = {
+      user_name: formData.name,
+      user_phone: formData.phone,
+      message: formData.comment,
+      factory: factoryName || "",
+      to_email: "abzalkojaixan3@gmail.com",
+    };
+
+    console.info("RequestForm: отправка emailjs с", templateParams);
+    setSending(true);
+
+    emailjs
+      .send("service_mfs129i", "template_vixeuwf", templateParams, "5hS_rdfopL-fNCVzY")
+      .then((res) => {
+        console.info("RequestForm: emailjs ответ:", res);
+        alert("Заявка отправлена!");
+        setFormData({ name: "", phone: "", comment: "" });
+        setSending(false);
+      })
+      .catch((err) => {
+        console.error("RequestForm: ошибка отправки:", err);
+        alert("Ошибка отправки, попробуйте позже.");
+        setSending(false);
+      });
   };
 
   return (
@@ -48,7 +76,9 @@ function RequestForm({ factoryName }) {
         onChange={handleChange}
         style={{ ...inputStyle, height: "80px" }}
       />
-      <button type="submit" style={buttonStyle}>Отправить</button>
+      <button type="submit" disabled={sending} style={buttonStyle}>
+        {sending ? "Отправка..." : "Отправить"}
+      </button>
     </form>
   );
 }

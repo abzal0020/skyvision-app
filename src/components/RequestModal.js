@@ -19,12 +19,13 @@ function RequestModal({ factoryName, onClose, t }) {
 
   const [sending, setSending] = useState(false);
 
-  // Инициализация (не всегда обязательна, но полезна)
+  // Инициализация (если нужно, замените ID на ваш)
   useEffect(() => {
     try {
-      emailjs.init("5hS_rdfopL-fNCVzY"); // если у вас другой user id - замените
-      // eslint-disable-next-line no-empty
-    } catch (err) {}
+      emailjs.init("5hS_rdfopL-fNCVzY");
+    } catch (err) {
+      // ignore
+    }
   }, []);
 
   const handle = e => setForm({ ...form, [e.target.name]: e.target.value });
@@ -33,7 +34,7 @@ function RequestModal({ factoryName, onClose, t }) {
 
   const submit = () => {
     const templateParams = {
-      // ВАЖНО: эти ключи должны совпадать с переменными вашего шаблона в EmailJS
+      // Эти ключи должны совпадать с переменными шаблона в EmailJS
       user_name: form.name,
       user_phone: form.phone,
       user_wechat: form.wechat,
@@ -43,8 +44,8 @@ function RequestModal({ factoryName, onClose, t }) {
       planGU: form.planGU,
       date: form.date,
       factory: factoryName || "",
-      // добавьте другие поля, если нужно:
-      // notes: form.notes,
+      // Явно передаём получателя; в шаблоне EmailJS используйте {{to_email}} в поле "To"
+      to_email: "abzalkojaixan3@gmail.com",
     };
 
     console.info("EmailJS: отправляю шаблон с параметрами:", templateParams);
@@ -52,11 +53,10 @@ function RequestModal({ factoryName, onClose, t }) {
 
     emailjs
       .send(
-        "service_mfs129i",      // <- проверьте service ID
-        "template_vixeuwf",     // <- проверьте template ID
+        "service_mfs129i",
+        "template_vixeuwf",
         templateParams,
-        // можно также передать user id в аргументах send, но мы инициализировали выше
-        // "5hS_rdfopL-fNCVzY"
+        "5hS_rdfopL-fNCVzY" // user id, можно убрать если вы инициализируете отдельно
       )
       .then((response) => {
         console.info("EmailJS: ответ сервера:", response);
@@ -79,7 +79,7 @@ function RequestModal({ factoryName, onClose, t }) {
 
   return (
     <div className="rm-backdrop" onClick={onClose}>
-      <div className="rm-modal" onClick={e => e.stopPropagation()}>
+      <div className="rm-modal" onClick={e => e.stopPropagation()}> 
         <button className="rm-close" onClick={onClose}>&#10005;</button>
         <h2 className="rm-title">{t.modal.title} • {factoryName || t.modal.factory}</h2>
 
