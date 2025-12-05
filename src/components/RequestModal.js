@@ -6,7 +6,9 @@ const EMAILJS_USER_ID = process.env.REACT_APP_EMAILJS_USER_ID || "5hS_rdfopL-fNC
 const EMAILJS_SERVICE_ID = process.env.REACT_APP_EMAILJS_SERVICE_ID || "service_mfs129i";
 const EMAILJS_TEMPLATE_ID = process.env.REACT_APP_EMAILJS_TEMPLATE_ID || "template_vixeuwf";
 
-function RequestModal({ factoryName, onClose, t }) {
+function RequestModal({ factoryName, onClose, t = {} }) {
+  // safe modal object so code never breaks if `t` is undefined
+  const modal = t?.modal || {};
   const [step, setStep] = useState(0);
   const today = new Date().toISOString().split("T")[0];
 
@@ -38,8 +40,16 @@ function RequestModal({ factoryName, onClose, t }) {
   const submit = async () => {
     if (step !== 2) return;
 
+    // Try to resolve factory name from props, data attribute on page, or query param
+    const resolvedFactory =
+      factoryName ||
+      modal.factory ||
+      document.querySelector('[data-factory-name]')?.dataset?.factoryName ||
+      new URLSearchParams(window.location.search).get('factory') ||
+      "";
+
     const templateParams = {
-      // Имена полей соответствуют полям в вашем шаблоне EmailJS
+      // поля совпадают с переменными шаблона в EmailJS
       name: form.name || "",
       phone: form.phone || "",
       wechat: form.wechat || "",
@@ -48,7 +58,7 @@ function RequestModal({ factoryName, onClose, t }) {
       station: form.station || "",
       planGU: form.planGU || "",
       date: form.date || "",
-      factory: factoryName || "",
+      factory: resolvedFactory,
       to_email: process.env.REACT_APP_RECIPIENT_EMAIL || "abzalkojaixan3@gmail.com",
     };
 
@@ -89,8 +99,8 @@ function RequestModal({ factoryName, onClose, t }) {
     return true;
   };
 
-  const modalTitle = t?.modal?.title || "Оставить заявку";
-  const modalFactory = factoryName || t?.modal?.factory || "";
+  const modalTitle = modal.title || "Оставить заявку";
+  const modalFactory = factoryName || modal.factory || "";
 
   return (
     <div className="rm-backdrop" onClick={() => { if (!sending) onClose(); }}>
@@ -99,7 +109,7 @@ function RequestModal({ factoryName, onClose, t }) {
         <h2 className="rm-title">{modalTitle} • {modalFactory}</h2>
 
         <div className="rm-steps-bar">
-          {(t?.modal?.steps || ['Данные','Дата','Проверка']).map((label, i) => (
+          {(modal.steps || ['Данные','Дата','Проверка']).map((label, i) => (
             <div key={label} className={`rm-step${step === i ? " active" : ""}${step > i ? " done" : ""}`}>
               <span className="rm-step-num">{i + 1}</span>
               <span className="rm-step-label">{label}</span>
@@ -109,9 +119,9 @@ function RequestModal({ factoryName, onClose, t }) {
 
         {step === 0 && (
           <form className="rm-form" onSubmit={e => { e.preventDefault(); next(); }}>
-            <input name="name" value={form.name} onChange={handle} placeholder={t?.modal?.name || 'Имя'} className="rm-input" autoFocus />
-            <input name="phone" value={form.phone} onChange={handle} placeholder={t?.modal?.phone || 'Телефон'} className="rm-input" />
-            <input name="wechat" value={form.wechat} onChange={handle} placeholder={t?.modal?.wechat || 'WeChat'} className="rm-input" />
+            <input name="name" value={form.name} onChange={handle} placeholder={modal.name || 'Имя'} className="rm-input" autoFocus />
+            <input name="phone" value={form.phone} onChange={handle} placeholder={modal.phone || 'Телефон'} className="rm-input" />
+            <input name="wechat" value={form.wechat} onChange={handle} placeholder={modal.wechat || 'WeChat'} className="rm-input" />
             <select name="city" value={form.city} onChange={handle} className="rm-input">
               <option>Костанай</option><option>Рудный</option>
             </select>
@@ -129,7 +139,7 @@ function RequestModal({ factoryName, onClose, t }) {
 
         {step === 1 && (
           <div className="rm-form">
-            <label className="rm-label">{t?.modal?.date || 'Дата'}</label>
+            <label className="rm-label">{modal.date || 'Дата'}</label>
             <input type="date" name="date" min={today} value={form.date} onChange={handle} className="rm-input" />
           </div>
         )}
@@ -137,23 +147,23 @@ function RequestModal({ factoryName, onClose, t }) {
         {step === 2 && (
           <div className="rm-review">
             {Object.entries({
-              [t?.modal?.name || 'Имя']: form.name,
-              [t?.modal?.phone || 'Телефон']: form.phone,
-              [t?.modal?.wechat || 'WeChat']: form.wechat,
-              [t?.modal?.city || 'Город']: form.city,
-              [t?.modal?.cargo || 'Груз']: form.cargo,
-              [t?.modal?.station || 'Станция']: form.station,
-              [t?.modal?.planGU || 'План ГУ']: form.planGU,
-              [t?.modal?.date || 'Дата']: form.date,
+              [modal.name || 'Имя']: form.name,
+              [modal.phone || 'Телефон']: form.phone,
+              [modal.wechat || 'WeChat']: form.wechat,
+              [modal.city || 'Город']: form.city,
+              [modal.cargo || 'Груз']: form.cargo,
+              [modal.station || 'Станция']: form.station,
+              [modal.planGU || 'План ГУ']: form.planGU,
+              [modal.date || 'Дата']: form.date,
             }).map(([k,v])=> <p key={k}><strong>{k}:</strong> {v}</p>)}
           </div>
         )}
 
         <div className="rm-btn-row">
-          <button onClick={() => { if (!sending) onClose(); }} className="rm-btn rm-btn-grey" type="button">{t?.modal?.cancel || 'Отмена'}</button>
-          {step>0 && <button onClick={back} className="rm-btn rm-btn-grey" type="button">{t?.modal?.back || 'Назад'}</button>}
-          {step<2 && <button onClick={next} disabled={!canNext() || sending} className="rm-btn rm-btn-blue" type="button">{t?.modal?.next || 'Далее'}</button>}
-          {step===2 && <button onClick={submit} disabled={sending} className="rm-btn rm-btn-blue" type="button">{sending ? "Отправка..." : (t?.modal?.submit || 'Отправить')}</button>}
+          <button onClick={() => { if (!sending) onClose(); }} className="rm-btn rm-btn-grey" type="button">{modal.cancel || 'Отмена'}</button>
+          {step>0 && <button onClick={back} className="rm-btn rm-btn-grey" type="button">{modal.back || 'Назад'}</button>}
+          {step<2 && <button onClick={next} disabled={!canNext() || sending} className="rm-btn rm-btn-blue" type="button">{modal.next || 'Далее'}</button>}
+          {step===2 && <button onClick={submit} disabled={sending} className="rm-btn rm-btn-blue" type="button">{sending ? "Отправка..." : (modal.submit || 'Отправить')}</button>}
         </div>
       </div>
     </div>
