@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import emailjs from "emailjs-com";
 
+const EMAILJS_USER_ID = process.env.REACT_APP_EMAILJS_USER_ID || "5hS_rdfopL-fNCVzY";
+const EMAILJS_SERVICE_ID = process.env.REACT_APP_EMAILJS_SERVICE_ID || "service_mfs129i";
+const EMAILJS_TEMPLATE_ID = process.env.REACT_APP_EMAILJS_TEMPLATE_ID || "template_vixeuwf";
+
 function RequestForm({ factoryName }) {
   const [formData, setFormData] = useState({
     name: "",
@@ -11,15 +15,17 @@ function RequestForm({ factoryName }) {
 
   useEffect(() => {
     try {
-      emailjs.init("5hS_rdfopL-fNCVzY");
-    } catch (err) {}
+      emailjs.init(EMAILJS_USER_ID);
+    } catch (err) {
+      console.warn("EmailJS init failed:", err);
+    }
   }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const templateParams = {
@@ -27,25 +33,30 @@ function RequestForm({ factoryName }) {
       user_phone: formData.phone,
       message: formData.comment,
       factory: factoryName || "",
-      to_email: "abzalkojaixan3@gmail.com",
+      to_email: process.env.REACT_APP_RECIPIENT_EMAIL || "abzalkojaixan3@gmail.com",
     };
 
     console.info("RequestForm: отправка emailjs с", templateParams);
     setSending(true);
 
-    emailjs
-      .send("service_mfs129i", "template_vixeuwf", templateParams, "5hS_rdfopL-fNCVzY")
-      .then((res) => {
-        console.info("RequestForm: emailjs ответ:", res);
-        alert("Заявка отправлена!");
-        setFormData({ name: "", phone: "", comment: "" });
-        setSending(false);
-      })
-      .catch((err) => {
-        console.error("RequestForm: ошибка отправки:", err);
-        alert("Ошибка отправки, попробуйте позже.");
-        setSending(false);
-      });
+    try {
+      const res = await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams, EMAILJS_USER_ID);
+      console.info("RequestForm: emailjs ответ:", res);
+      alert("✅ Заявка отправлена!");
+      setFormData({ name: "", phone: "", comment: "" });
+      setSending(false);
+    } catch (err) {
+      console.error("RequestForm: ошибка отправки:", err);
+      let msg = "Ошибка отправки";
+      if (err && err.text) msg = err.text;
+      else if (err && err.status) msg = `status: ${err.status}`;
+      else if (err && err.message) msg = err.message;
+      else {
+        try { msg = JSON.stringify(err); } catch(e){ msg = String(err); }
+      }
+      alert(`Ошибка отправки: ${msg}. Проверьте консоль разработчика (F12) для деталей.`);
+      setSending(false);
+    }
   };
 
   return (
