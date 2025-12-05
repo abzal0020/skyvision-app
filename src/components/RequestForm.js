@@ -29,11 +29,18 @@ function RequestForm({ factoryName }) {
     e.preventDefault();
 
     const templateParams = {
-      user_name: formData.name,
-      user_phone: formData.phone,
-      message: formData.comment,
+      // Имена полей соответствуют полям в вашем шаблоне EmailJS
+      name: formData.name || "",
+      phone: formData.phone || "",
+      wechat: formData.wechat || "",
+      city: formData.city || "",
+      cargo: formData.cargo || "",
+      station: formData.station || "",
+      planGU: formData.planGU || "",
+      date: formData.date || "",
       factory: factoryName || "",
       to_email: process.env.REACT_APP_RECIPIENT_EMAIL || "abzalkojaixan3@gmail.com",
+      message: formData.comment || "",
     };
 
     console.info("RequestForm: отправка emailjs с", templateParams);
@@ -48,13 +55,15 @@ function RequestForm({ factoryName }) {
     } catch (err) {
       console.error("RequestForm: ошибка отправки:", err);
       let msg = "Ошибка отправки";
-      if (err && err.text) msg = err.text;
-      else if (err && err.status) msg = `status: ${err.status}`;
-      else if (err && err.message) msg = err.message;
-      else {
-        try { msg = JSON.stringify(err); } catch(e){ msg = String(err); }
+      try {
+        if (err && err.text) msg = err.text;
+        else if (err && err.status) msg = `status: ${err.status}`;
+        else if (err && err.message) msg = err.message;
+        else msg = JSON.stringify(err);
+      } catch (e) {
+        msg = String(err);
       }
-      alert(`Ошибка отправки: ${msg}. Проверьте консоль разработчика (F12) для деталей.`);
+      alert(`Ошибка отправки: ${msg}. Проверьте DevTools → Network (POST к api.emailjs.com) для деталей.`);
       setSending(false);
     }
   };
