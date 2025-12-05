@@ -6,27 +6,30 @@ import {
   FaCity, FaIndustry, FaWarehouse, FaShippingFast, FaDollarSign,
   FaChartLine, FaBox, FaMoneyBillWave, FaShoppingCart, FaBars, FaTimes
 } from "react-icons/fa";
+import RequestModal from "./components/RequestModal";
+
+// Static data - moved outside component to avoid re-creation on every render
+const rawData = [
+  { city: "Костанай", factory: "Agrodan KsT", price: 190, minOrder: 20, payment: "50% предоплата" },
+  { city: "Костанай", factory: "Mibeko", price: 195, minOrder: 25, payment: "50% предоплата" },
+  { city: "Костанай", factory: "Khlebny Dom", price: 195, minOrder: 15, payment: "50% предоплата" },
+  { city: "Костанай", factory: "Rahmat", price: 190, minOrder: 20, payment: "50% предоплата" },
+  { city: "Костанай", factory: "IBMO (Magomed)", price: 185, minOrder: 30, payment: "50% предоплата" },
+  { city: "Рудный", factory: "Rudni (Marat)", price: 200, minOrder: 15, payment: "50% предоплата" },
+  { city: "Костанай", factory: "Brothers Agro", price: 195, minOrder: 20, payment: "50% предоплата" },
+  { city: "Костанай", factory: "Agroplanet", price: 195, minOrder: 25, payment: "60% предоплата" },
+  { city: "Костанай", factory: "Romana", price: 195, minOrder: 20, payment: "50% предоплата" },
+  { city: "Костанай", factory: "Best Kostanai (malik)", price: 195, minOrder: 30, payment: "50% предоплата" },
+  { city: "Костанай", factory: "Vadisa m", price: 195, minOrder: 20, payment: "50% предоплата" },
+  { city: "Костанай", factory: "Harvest (Azamat)", price: 205, minOrder: 15, payment: "50% предоплата" },
+  { city: "Костанай", factory: "Agromix", price: 195, minOrder: 20, payment: "50% предоплата" },
+  { city: "Костанай", factory: "Shahristan agro", price: 190, minOrder: 25, payment: "50% предоплата" },
+  { city: "Костанай", factory: "Agrofood export", price: 195, minOrder: 20, payment: "50% предоплата" },
+];
 
 // !!! Обязательно передавай проп t={t} из App.js !!!
 export default function Prices({ t }) {
   const logistics = 38;
-  const rawData = [
-    { city: "Костанай", factory: "Agrodan KsT", price: 190, minOrder: 20, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Mibeko", price: 195, minOrder: 25, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Khlebny Dom", price: 195, minOrder: 15, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Rahmat", price: 190, minOrder: 20, payment: "50% предоплата" },
-    { city: "Костанай", factory: "IBMO (Magomed)", price: 185, minOrder: 30, payment: "50% предоплата" },
-    { city: "Рудный", factory: "Rudni (Marat)", price: 200, minOrder: 15, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Brothers Agro", price: 195, minOrder: 20, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Agroplanet", price: 195, minOrder: 25, payment: "60% предоплата" },
-    { city: "Костанай", factory: "Romana", price: 195, minOrder: 20, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Best Kostanai (malik)", price: 195, minOrder: 30, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Vadisa m", price: 195, minOrder: 20, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Harvest (Azamat)", price: 205, minOrder: 15, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Agromix", price: 195, minOrder: 20, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Shahristan agro", price: 190, minOrder: 25, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Agrofood export", price: 195, minOrder: 20, payment: "50% предоплата" },
-  ];
 
   const links = {
     "Agrodan KsT": "/factory/agrodan",
@@ -52,8 +55,8 @@ export default function Prices({ t }) {
   const [filterCity, setCity] = useState("Все");
   const [sort, setSort] = useState({ field: "dap", asc: true });
   const [expandedRow, setExpandedRow] = useState(null);
-  const [showOrderModal, setShowOrderModal] = useState(false);
-  const [selectedFactory, setSelectedFactory] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [factoryName, setFactoryName] = useState("");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -87,10 +90,10 @@ export default function Prices({ t }) {
 
   const toggleRow = (index) => setExpandedRow(expandedRow === index ? null : index);
 
-  const handleOrderClick = (factoryName, e) => {
+  const handleOrderClick = (factory, e) => {
     e.stopPropagation();
-    setSelectedFactory(factoryName);
-    setShowOrderModal(true);
+    setFactoryName(factory);
+    setShowModal(true);
   };
 
   return (
@@ -259,6 +262,7 @@ export default function Prices({ t }) {
                             <button
                               style={orderButtonStyle}
                               onClick={(e) => handleOrderClick(r.factory, e)}
+                              data-factory-name={r.factory}
                             >
                               <FaShoppingCart /> {t.prices.orderBtn}
                             </button>
@@ -286,10 +290,11 @@ export default function Prices({ t }) {
         </div>
       </div>
 
-      {showOrderModal && (
+      {/* RequestModal component */}
+      {showModal && (
         <RequestModal
-          factoryName={selectedFactory}
-          onClose={() => setShowOrderModal(false)}
+          factoryName={factoryName}
+          onClose={() => setShowModal(false)}
           t={t}
         />
       )}
@@ -369,11 +374,10 @@ const filterGroupStyle = {
 };
 
 const labelStyle = {
-  display: "block",
+  display: "flex",
   fontWeight: "600",
   marginBottom: "0.5rem",
   color: "#2c3e50",
-  display: "flex",
   alignItems: "center",
   gap: "0.5rem",
   fontSize: "0.9rem",
@@ -459,12 +463,6 @@ const linkStyle = {
   textDecoration: "none",
 };
 
-const phoneLinkStyle = {
-  color: "#3498db",
-  textDecoration: "none",
-  marginLeft: "0.5rem",
-};
-
 const bestBadgeStyle = {
   position: "absolute",
   top: "-10px",
@@ -542,86 +540,5 @@ const summaryItemStyle = {
   minWidth: "150px",
   display: "flex",
   alignItems: "center",
-  fontSize: "0.9rem",
-};
-
-const modalOverlayStyle = {
-  position: "fixed",
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  backgroundColor: "rgba(0, 0, 0, 0.5)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  zIndex: 1000,
-  padding: "1rem",
-};
-
-const modalStyle = {
-  backgroundColor: "#fff",
-  borderRadius: "8px",
-  padding: "1.5rem",
-  width: "100%",
-  maxWidth: "500px",
-  maxHeight: "90vh",
-  overflowY: "auto",
-  boxShadow: "0 5px 15px rgba(0, 0, 0, 0.3)",
-};
-
-const modalTitleStyle = {
-  marginTop: 0,
-  marginBottom: "1.2rem",
-  color: "#2c3e50",
-  fontSize: "1.2rem",
-};
-
-const formGroupStyle = {
-  marginBottom: "1rem",
-};
-
-const formLabelStyle = {
-  display: "block",
-  marginBottom: "0.5rem",
-  fontWeight: "600",
-  color: "#2c3e50",
-  fontSize: "0.9rem",
-};
-
-const inputStyle = {
-  width: "100%",
-  padding: "0.6rem",
-  border: "1px solid #ddd",
-  borderRadius: "4px",
-  fontSize: "0.9rem",
-};
-
-const buttonGroupStyle = {
-  display: "flex",
-  justifyContent: "flex-end",
-  gap: "0.8rem",
-  marginTop: "1.2rem",
-};
-
-const cancelButtonStyle = {
-  background: "#e74c3c",
-  color: "white",
-  border: "none",
-  padding: "0.6rem 1rem",
-  borderRadius: "4px",
-  cursor: "pointer",
-  fontWeight: "600",
-  fontSize: "0.9rem",
-};
-
-const submitButtonStyle = {
-  background: "#27ae60",
-  color: "white",
-  border: "none",
-  padding: "0.6rem 1rem",
-  borderRadius: "4px",
-  cursor: "pointer",
-  fontWeight: "600",
   fontSize: "0.9rem",
 };
