@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
+import RequestModal from "./components/RequestModal";
 import {
   FaSort, FaSortUp, FaSortDown,
   FaCity, FaIndustry, FaWarehouse, FaShippingFast, FaDollarSign,
@@ -285,52 +286,12 @@ export default function Prices({ t }) {
         </div>
       </div>
 
-      {/* Модальное окно заказа */}
       {showOrderModal && (
-        <div style={modalOverlayStyle}>
-          <div style={modalStyle}>
-            <h3 style={modalTitleStyle}>
-              {t.prices.modal.order}: {selectedFactory}
-            </h3>
-            <div style={formGroupStyle}>
-              <label style={formLabelStyle}>{t.prices.modal.name}:</label>
-              <input type="text" style={inputStyle} />
-            </div>
-            <div style={formGroupStyle}>
-              <label style={formLabelStyle}>{t.prices.modal.phone}:</label>
-              <input type="tel" style={inputStyle} />
-            </div>
-            {!isMobile && (
-              <>
-                <div style={formGroupStyle}>
-                  <label style={formLabelStyle}>{t.prices.modal.email}:</label>
-                  <input type="email" style={inputStyle} />
-                </div>
-                <div style={formGroupStyle}>
-                  <label style={formLabelStyle}>{t.prices.modal.amount}:</label>
-                  <input type="number" style={inputStyle} min="10" />
-                </div>
-              </>
-            )}
-            <div style={buttonGroupStyle}>
-              <button
-                style={cancelButtonStyle}
-                onClick={() => setShowOrderModal(false)}
-              >
-                {t.prices.modal.cancel}
-              </button>
-              <button
-                style={submitButtonStyle}
-                onClick={() => {
-                  alert(`${t.prices.modal.order} ${selectedFactory} отправлен!`);
-                  setShowOrderModal(false);
-                }}
-              >
-                {t.prices.modal.submit}
-              </button>
-            </div>
-          </div>
-        </div>
+        <RequestModal
+          factoryName={selectedFactory}
+          onClose={() => setShowOrderModal(false)}
+          t={t}
+        />
       )}
     </div>
   );
