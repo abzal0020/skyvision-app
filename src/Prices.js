@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
+import RequestModal from "./components/RequestModal";
 import {
   FaSort, FaSortUp, FaSortDown,
   FaCity, FaIndustry, FaWarehouse, FaShippingFast, FaDollarSign,
