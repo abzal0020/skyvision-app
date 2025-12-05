@@ -1,159 +1,162 @@
-import React, { useState, useEffect } from "react";
-import emailjs from "emailjs-com";
-import "./RequestModal.css";
+/* RequestModal styles */
 
-const EMAILJS_USER_ID = process.env.REACT_APP_EMAILJS_USER_ID || "5hS_rdfopL-fNCVzY";
-const EMAILJS_SERVICE_ID = process.env.REACT_APP_EMAILJS_SERVICE_ID || "service_mfs129i";
-const EMAILJS_TEMPLATE_ID = process.env.REACT_APP_EMAILJS_TEMPLATE_ID || "template_vixeuwf";
-
-function RequestModal({ factoryName, onClose, t }) {
-  const [step, setStep] = useState(0);
-  const today = new Date().toISOString().split("T")[0];
-
-  const [form, setForm] = useState({
-    name:    "",
-    phone:   "",
-    wechat:  "",
-    city:    "Костанай",
-    cargo:   "Кормовая мука",
-    station: "Хоргос",
-    planGU:  "с планом ГУ",
-    date:    today,
-  });
-
-  const [sending, setSending] = useState(false);
-
-  useEffect(() => {
-    try {
-      emailjs.init(EMAILJS_USER_ID);
-    } catch (err) {
-      console.warn("EmailJS init failed:", err);
-    }
-  }, []);
-
-  const handle = e => setForm({ ...form, [e.target.name]: e.target.value });
-  const next   = () => setStep(s => s + 1);
-  const back   = () => setStep(s => s - 1);
-
-  const submit = async () => {
-    if (step !== 2) return;
-
-    const templateParams = {
-      user_name: form.name,
-      user_phone: form.phone,
-      user_wechat: form.wechat,
-      city: form.city,
-      cargo: form.cargo,
-      station: form.station,
-      planGU: form.planGU,
-      date: form.date,
-      factory: factoryName || "",
-      to_email: process.env.REACT_APP_RECIPIENT_EMAIL || "abzalkojaixan3@gmail.com",
-    };
-
-    console.info("EmailJS: отправляю шаблон с параметрами:", templateParams);
-    setSending(true);
-
-    try {
-      const response = await emailjs.send(
-        EMAILJS_SERVICE_ID,
-        EMAILJS_TEMPLATE_ID,
-        templateParams,
-        EMAILJS_USER_ID
-      );
-      console.info("EmailJS: ответ сервера:", response);
-      alert("✅ Заявка отправлена! Скоро свяжемся.");
-      setSending(false);
-      onClose();
-    } catch (err) {
-      console.error("EmailJS: ошибка при отправке:", err);
-      let msg = "Ошибка отправки";
-      if (err && err.text) msg = err.text;
-      else if (err && err.status) msg = `status: ${err.status}`;
-      else if (err && err.message) msg = err.message;
-      else {
-        try { msg = JSON.stringify(err); } catch(e){ msg = String(err); }
-      }
-      alert(`Ошибка отправки: ${msg}. Проверьте консоль разработчика (F12) для деталей.`);
-      setSending(false);
-    }
-  };
-
-  const canNext = () => {
-    if (step === 0) return form.name && form.phone;
-    if (step === 1) return !!form.date;
-    return true;
-  };
-
-  return (
-    <div className="rm-backdrop" onClick={() => { if (!sending) onClose(); }}>
-      <div className="rm-modal" onClick={e => e.stopPropagation()}>
-        <button className="rm-close" onClick={() => { if (!sending) onClose(); }}>&#10005;</button>
-        <h2 className="rm-title">{t?.modal?.title || 'Оставить заявку'} • {factoryName || (t?.modal?.factory) || ''}</h2>
-
-        <div className="rm-steps-bar">
-          {(t?.modal?.steps || ['Данные','Дата','Проверка']).map((label, i) => (
-            <div
-              key={label}
-              className={`rm-step${step === i ? " active" : ""}${step > i ? " done" : ""}`}
-            >
-              <span className="rm-step-num">{i + 1}</span>
-              <span className="rm-step-label">{label}</span>
-            </div>
-          ))}
-        </div>
-
-        {step === 0 && (
-          <form className="rm-form" onSubmit={e => {e.preventDefault(); next();}}>
-            <input name="name"    value={form.name}    onChange={handle} placeholder={t?.modal?.name || 'Имя'}    className="rm-input" autoFocus />
-            <input name="phone"   value={form.phone}   onChange={handle} placeholder={t?.modal?.phone || 'Телефон'}   className="rm-input" />
-            <input name="wechat"  value={form.wechat}  onChange={handle} placeholder={t?.modal?.wechat || 'WeChat'}  className="rm-input" />
-            <select name="city"   value={form.city}    onChange={handle} className="rm-input">
-              <option>Костанай</option><option>Рудный</option>
-            </select>
-            <select name="cargo"  value={form.cargo}   onChange={handle} className="rm-input">
-              <option>Кормовая мука</option><option>Ячмень</option>
-            </select>
-            <select name="station" value={form.station} onChange={handle} className="rm-input">
-              <option>Хоргос</option><option>Алтынколь</option>
-            </select>
-            <select name="planGU" value={form.planGU}  onChange={handle} className="rm-input">
-              <option>с планом ГУ</option><option>без плана</option>
-            </select>
-          </form>
-        )}
-
-        {step === 1 && (
-          <div className="rm-form">
-            <label className="rm-label">{t?.modal?.date || 'Дата'}</label>
-            <input type="date" name="date" min={today} value={form.date} onChange={handle} className="rm-input"/>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="rm-review">
-            {Object.entries({
-              [t?.modal?.name || 'Имя']: form.name,
-              [t?.modal?.phone || 'Телефон']: form.phone,
-              [t?.modal?.wechat || 'WeChat']: form.wechat,
-              [t?.modal?.city || 'Город']: form.city,
-              [t?.modal?.cargo || 'Груз']: form.cargo,
-              [t?.modal?.station || 'Станция']: form.station,
-              [t?.modal?.planGU || 'План ГУ']: form.planGU,
-              [t?.modal?.date || 'Дата']: form.date,
-            }).map(([k,v])=> <p key={k}><strong>{k}:</strong> {v}</p>)}
-          </div>
-        )}
-
-        <div className="rm-btn-row">
-          <button onClick={() => { if (!sending) onClose(); }} className="rm-btn rm-btn-grey" type="button">{t?.modal?.cancel || 'Отмена'}</button>
-          {step>0   && <button onClick={back}   className="rm-btn rm-btn-grey" type="button">{t?.modal?.back || 'Назад'}</button>}
-          {step<2   && <button onClick={next}   disabled={!canNext() || sending} className="rm-btn rm-btn-blue" type="button">{t?.modal?.next || 'Далее'}</button>}
-          {step===2 && <button onClick={submit} disabled={sending} className="rm-btn rm-btn-blue" type="button">{sending ? "Отправка..." : (t?.modal?.submit || 'Отправить')}</button>}
-        </div>
-      </div>
-    </div>
-  );
+.rm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 3030;
+  animation: fadeIn .2s;
+}
+@keyframes fadeIn {
+  from { opacity: 0 }
+  to   { opacity: 1 }
 }
 
-export default RequestModal;
+.rm-modal {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 10px 36px rgba(0,0,0,.18);
+  padding: 24px 16px 16px 16px;
+  width: 97vw;
+  max-width: 420px;
+  box-sizing: border-box;
+  position: relative;
+  animation: popIn .2s;
+}
+@keyframes popIn {
+  from { transform: scale(0.95); opacity:.5 }
+  to   { transform: scale(1); opacity:1 }
+}
+
+.rm-close {
+  position: absolute;
+  top: 10px; right: 10px;
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  color: #999;
+  cursor: pointer;
+  padding: 3px 7px;
+  z-index: 11;
+  transition: color 0.17s;
+}
+.rm-close:hover { color: #000080; }
+
+.rm-title {
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: #000080;
+  letter-spacing: 0.5px;
+}
+
+.rm-steps-bar {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.rm-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0.7;
+  position: relative;
+}
+.rm-step-num {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #e3e6f3;
+  color: #222;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.16rem;
+  font-weight: 500;
+  margin-bottom: 3px;
+  border: 2px solid #e3e6f3;
+  transition: all .18s;
+}
+.rm-step.active .rm-step-num {
+  background: #000080;
+  color: #fff;
+  border: 2px solid #000080;
+}
+.rm-step.done .rm-step-num {
+  background: #27ae60;
+  color: #fff;
+  border: 2px solid #27ae60;
+}
+.rm-step-label {
+  font-size: 0.78rem;
+  color: #777;
+  margin-top: -2px;
+  text-align: center;
+  min-width: 55px;
+  max-width: 90px;
+}
+
+/* Form */
+.rm-form {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  margin-bottom: 8px;
+}
+.rm-input, .rm-form select, .rm-form input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 13px;
+  font-size: 1rem;
+  border-radius: 7px;
+  border: 1px solid #ccd2e0;
+  outline: none;
+  transition: box-shadow .12s, border-color .12s;
+}
+.rm-input:focus, .rm-form input:focus, .rm-form select:focus {
+  box-shadow: 0 6px 18px rgba(44,60,210,0.06);
+  border-color: #6b7be0;
+}
+
+/* Review */
+.rm-review p {
+  margin: 0 0 8px 0;
+  line-height: 1.35;
+}
+
+/* Buttons */
+.rm-btn-row {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+.rm-btn {
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+}
+.rm-btn-grey {
+  background: #f0f2f7;
+  color: #333;
+}
+.rm-btn-blue {
+  background: #000080;
+  color: #fff;
+}
+
+/* Responsive */
+@media (max-width: 520px) {
+  .rm-modal { max-width: 96vw; padding: 18px; }
+  .rm-step-label { min-width: 40px; font-size: .66rem; }
+  .rm-title { font-size: 1rem; }
+}
