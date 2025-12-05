@@ -286,7 +286,7 @@ export default function Prices({ t }) {
         </div>
       </div>
 
-   {showOrderModal && (
+ {showOrderModal && (
   <RequestModal
     factoryName={selectedFactory}
     onClose={() => setShowOrderModal(false)}
@@ -294,21 +294,6 @@ export default function Prices({ t }) {
   />
 )}
       
-            <div style={buttonGroupStyle}>
-              <button
-                style={cancelButtonStyle}
-                onClick={() => setShowOrderModal(false)}
-              >
-                {t.prices.modal.cancel}
-              </button>
-              <button
-                style={submitButtonStyle}
-                onClick={() => {
-                  alert(`${t.prices.modal.order} ${selectedFactory} отправлен!`);
-                  setShowOrderModal(false);
-                }}
-              >
-                {t.prices.modal.submit}
               </button>
             </div>
           </div>
