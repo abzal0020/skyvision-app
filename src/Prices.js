@@ -1,4 +1,3 @@
-// (вставь сюда точно тот же код, который ты получил ранее - полный исправленный файл Prices.js)
 import React, { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import RequestModal from "./components/RequestModal";
@@ -398,10 +397,10 @@ const selectStyle = {
 
 const tableContainerStyle = {
   overflowX: "auto",
-  borderRadius: "8px',
-  border: '1px solid #eee',
-  marginBottom: '1rem',
-  WebkitOverflowScrolling: 'touch',
+  borderRadius: "8px",
+  border: "1px solid #eee",
+  marginBottom: "1rem",
+  WebkitOverflowScrolling: "touch",
 };
 
 const tableStyle = {
@@ -417,8 +416,6 @@ const mobileTableStyle = {
   minWidth: "500px",
   fontSize: "0.85rem",
 };
-
-// ... (оставшиеся стили как раньше)
 
 const thStyle = {
   background: "#f8f9fa",
