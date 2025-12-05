@@ -2,6 +2,10 @@ import React, { useState, useEffect } from "react";
 import emailjs from "emailjs-com";
 import "./RequestModal.css";
 
+const EMAILJS_USER_ID = process.env.REACT_APP_EMAILJS_USER_ID || "5hS_rdfopL-fNCVzY";
+const EMAILJS_SERVICE_ID = process.env.REACT_APP_EMAILJS_SERVICE_ID || "service_mfs129i";
+const EMAILJS_TEMPLATE_ID = process.env.REACT_APP_EMAILJS_TEMPLATE_ID || "template_vixeuwf";
+
 function RequestModal({ factoryName, onClose, t }) {
   const [step, setStep] = useState(0);
   const today = new Date().toISOString().split("T")[0];
@@ -19,12 +23,11 @@ function RequestModal({ factoryName, onClose, t }) {
 
   const [sending, setSending] = useState(false);
 
-  // Инициализация (если нужно, замените ID на ваш)
   useEffect(() => {
     try {
-      emailjs.init("5hS_rdfopL-fNCVzY");
+      emailjs.init(EMAILJS_USER_ID);
     } catch (err) {
-      // ignore
+      console.warn("EmailJS init failed:", err);
     }
   }, []);
 
@@ -32,43 +35,52 @@ function RequestModal({ factoryName, onClose, t }) {
   const next   = () => setStep(s => s + 1);
   const back   = () => setStep(s => s - 1);
 
-  const submit = () => {
+  const submit = async () => {
+    if (step !== 2) return;
+
     const templateParams = {
-      // Эти ключи должны совпадать с переменными шаблона в EmailJS
-      user_name: form.name,
-      user_phone: form.phone,
-      user_wechat: form.wechat,
-      city: form.city,
-      cargo: form.cargo,
-      station: form.station,
-      planGU: form.planGU,
-      date: form.date,
+      // Имена полей соответствуют полям в вашем шаблоне EmailJS
+      name: form.name || "",
+      phone: form.phone || "",
+      wechat: form.wechat || "",
+      city: form.city || "",
+      cargo: form.cargo || "",
+      station: form.station || "",
+      planGU: form.planGU || "",
+      date: form.date || "",
       factory: factoryName || "",
-      // Явно передаём получателя; в шаблоне EmailJS используйте {{to_email}} в поле "To"
-      to_email: "abzalkojaixan3@gmail.com",
+      to_email: process.env.REACT_APP_RECIPIENT_EMAIL || "abzalkojaixan3@gmail.com",
     };
 
     console.info("EmailJS: отправляю шаблон с параметрами:", templateParams);
     setSending(true);
 
-    emailjs
-      .send(
-        "service_mfs129i",
-        "template_vixeuwf",
+    try {
+      const response = await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
         templateParams,
-        "5hS_rdfopL-fNCVzY" // user id, можно убрать если вы инициализируете отдельно
-      )
-      .then((response) => {
-        console.info("EmailJS: ответ сервера:", response);
-        alert("✅ Заявка отправлена! Скоро свяжемся.");
-        setSending(false);
-        onClose();
-      })
-      .catch((err) => {
-        console.error("EmailJS: ошибка при отправке:", err);
-        alert("Ошибка отправки, попробуйте позже. Проверьте консоль для деталей.");
-        setSending(false);
-      });
+        EMAILJS_USER_ID
+      );
+      console.info("EmailJS: ответ сервера:", response);
+      alert("✅ Заявка отправлена! Скоро свяжемся.");
+      setSending(false);
+      onClose();
+    } catch (err) {
+      console.error("EmailJS: ошибка при отправке:", err);
+      let msg = "Ошибка отправки";
+      try {
+        if (err && err.text) msg = err.text;
+        else if (err && err.status) msg = `status: ${err.status}`;
+        else if (err && err.message) msg = err.message;
+        else if (err && err.response) msg = JSON.stringify(err.response);
+        else msg = JSON.stringify(err);
+      } catch (e) {
+        msg = String(err);
+      }
+      alert(`Ошибка отправки: ${msg}. Проверьте DevTools → Network (POST к api.emailjs.com) для деталей.`);
+      setSending(false);
+    }
   };
 
   const canNext = () => {
@@ -77,18 +89,18 @@ function RequestModal({ factoryName, onClose, t }) {
     return true;
   };
 
+  const modalTitle = t?.modal?.title || "Оставить заявку";
+  const modalFactory = factoryName || t?.modal?.factory || "";
+
   return (
-    <div className="rm-backdrop" onClick={onClose}>
-      <div className="rm-modal" onClick={e => e.stopPropagation()}> 
-        <button className="rm-close" onClick={onClose}>&#10005;</button>
-        <h2 className="rm-title">{t.modal.title} • {factoryName || t.modal.factory}</h2>
+    <div className="rm-backdrop" onClick={() => { if (!sending) onClose(); }}>
+      <div className="rm-modal" onClick={e => e.stopPropagation()}>
+        <button className="rm-close" onClick={() => { if (!sending) onClose(); }}>&#10005;</button>
+        <h2 className="rm-title">{modalTitle} • {modalFactory}</h2>
 
         <div className="rm-steps-bar">
-          {t.modal.steps.map((label, i) => (
-            <div
-              key={label}
-              className={`rm-step${step === i ? " active" : ""}${step > i ? " done" : ""}`}
-            >
+          {(t?.modal?.steps || ['Данные','Дата','Проверка']).map((label, i) => (
+            <div key={label} className={`rm-step${step === i ? " active" : ""}${step > i ? " done" : ""}`}>
               <span className="rm-step-num">{i + 1}</span>
               <span className="rm-step-label">{label}</span>
             </div>
@@ -96,20 +108,20 @@ function RequestModal({ factoryName, onClose, t }) {
         </div>
 
         {step === 0 && (
-          <form className="rm-form" onSubmit={e => {e.preventDefault(); next();}}>
-            <input name="name"    value={form.name}    onChange={handle} placeholder={t.modal.name}    className="rm-input" autoFocus />
-            <input name="phone"   value={form.phone}   onChange={handle} placeholder={t.modal.phone}   className="rm-input" />
-            <input name="wechat"  value={form.wechat}  onChange={handle} placeholder={t.modal.wechat}  className="rm-input" />
-            <select name="city"   value={form.city}    onChange={handle} className="rm-input">
+          <form className="rm-form" onSubmit={e => { e.preventDefault(); next(); }}>
+            <input name="name" value={form.name} onChange={handle} placeholder={t?.modal?.name || 'Имя'} className="rm-input" autoFocus />
+            <input name="phone" value={form.phone} onChange={handle} placeholder={t?.modal?.phone || 'Телефон'} className="rm-input" />
+            <input name="wechat" value={form.wechat} onChange={handle} placeholder={t?.modal?.wechat || 'WeChat'} className="rm-input" />
+            <select name="city" value={form.city} onChange={handle} className="rm-input">
               <option>Костанай</option><option>Рудный</option>
             </select>
-            <select name="cargo"  value={form.cargo}   onChange={handle} className="rm-input">
+            <select name="cargo" value={form.cargo} onChange={handle} className="rm-input">
               <option>Кормовая мука</option><option>Ячмень</option>
             </select>
             <select name="station" value={form.station} onChange={handle} className="rm-input">
               <option>Хоргос</option><option>Алтынколь</option>
             </select>
-            <select name="planGU" value={form.planGU}  onChange={handle} className="rm-input">
+            <select name="planGU" value={form.planGU} onChange={handle} className="rm-input">
               <option>с планом ГУ</option><option>без плана</option>
             </select>
           </form>
@@ -117,31 +129,31 @@ function RequestModal({ factoryName, onClose, t }) {
 
         {step === 1 && (
           <div className="rm-form">
-            <label className="rm-label">{t.modal.date}</label>
-            <input type="date" name="date" min={today} value={form.date} onChange={handle} className="rm-input"/>
+            <label className="rm-label">{t?.modal?.date || 'Дата'}</label>
+            <input type="date" name="date" min={today} value={form.date} onChange={handle} className="rm-input" />
           </div>
         )}
 
         {step === 2 && (
           <div className="rm-review">
             {Object.entries({
-              [t.modal.name]: form.name,
-              [t.modal.phone]: form.phone,
-              [t.modal.wechat]: form.wechat,
-              [t.modal.city]: form.city,
-              [t.modal.cargo]: form.cargo,
-              [t.modal.station]: form.station,
-              [t.modal.planGU]: form.planGU,
-              [t.modal.date]: form.date,
+              [t?.modal?.name || 'Имя']: form.name,
+              [t?.modal?.phone || 'Телефон']: form.phone,
+              [t?.modal?.wechat || 'WeChat']: form.wechat,
+              [t?.modal?.city || 'Город']: form.city,
+              [t?.modal?.cargo || 'Груз']: form.cargo,
+              [t?.modal?.station || 'Станция']: form.station,
+              [t?.modal?.planGU || 'План ГУ']: form.planGU,
+              [t?.modal?.date || 'Дата']: form.date,
             }).map(([k,v])=> <p key={k}><strong>{k}:</strong> {v}</p>)}
           </div>
         )}
 
         <div className="rm-btn-row">
-          <button onClick={onClose} className="rm-btn rm-btn-grey" type="button">{t.modal.cancel}</button>
-          {step>0   && <button onClick={back}   className="rm-btn rm-btn-grey" type="button">{t.modal.back}</button>}
-          {step<2   && <button onClick={next}   disabled={!canNext()} className="rm-btn rm-btn-blue" type="button">{t.modal.next}</button>}
-          {step===2 && <button onClick={submit} disabled={sending} className="rm-btn rm-btn-blue" type="button">{sending ? "Отправка..." : t.modal.submit}</button>}
+          <button onClick={() => { if (!sending) onClose(); }} className="rm-btn rm-btn-grey" type="button">{t?.modal?.cancel || 'Отмена'}</button>
+          {step>0 && <button onClick={back} className="rm-btn rm-btn-grey" type="button">{t?.modal?.back || 'Назад'}</button>}
+          {step<2 && <button onClick={next} disabled={!canNext() || sending} className="rm-btn rm-btn-blue" type="button">{t?.modal?.next || 'Далее'}</button>}
+          {step===2 && <button onClick={submit} disabled={sending} className="rm-btn rm-btn-blue" type="button">{sending ? "Отправка..." : (t?.modal?.submit || 'Отправить')}</button>}
         </div>
       </div>
     </div>
