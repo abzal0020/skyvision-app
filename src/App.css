@@ -456,3 +456,35 @@ footer {
   background: linear-gradient(180deg,#cce6f7 50%,#ddeffc 100%);
   border-radius: 8px;
 }
+
+/* ==== Стили для телефонной ссылки в шапке (header) ==== */
+
+.header-contacts {
+  color: inherit;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: color 0.12s ease;
+}
+
+/* Если у тебя .header-contacts был <div>, теперь он <a>, но селектор тот же */
+.header-contacts:hover,
+.header-contacts:focus {
+  color: #1a237e;
+  text-decoration: none;
+  outline: none;
+}
+
+.header-contacts:focus-visible {
+  outline: 2px solid rgba(26, 35, 126, 0.12);
+  border-radius: 4px;
+}
+
+/* Мелкая настройка иконки в header */
+.header-contacts svg {
+  vertical-align: middle;
+  margin-right: 6px;
+  color: inherit;
+}
