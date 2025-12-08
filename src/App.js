@@ -58,12 +58,7 @@ function Home({ t, openModal }) {
           <button className="btn-main" onClick={() => openModal(t.hero.request)}>
             {t.hero.request}
           </button>
-          <div className="hero-phone">
-            <FaPhone />{" "}
-            <a href={`tel:${DEFAULT_TEL_HREF}`} className="hero-phone-link" aria-label={`Позвонить ${t.hero.phone}`}>
-              {t.hero.phone}
-            </a>
-          </div>
+          {/* Номер удалён с главной страницы — оставлена только кнопка "Оставить заявку" */}
         </div>
       </section>
 
