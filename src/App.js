@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import { FaSearch, FaPhone, FaGlobe } from "react-icons/fa";
+import { FaSearch, FaPhone } from "react-icons/fa";
 import Prices from "./Prices";
 import Contact from "./Contact";
 import Agrodan from "./factories/Agrodan";
@@ -158,7 +158,7 @@ function App() {
             <Route path="/factory/agrofood" element={<FactoryAgrofood />} />
           </Routes>
         </main>
-         <Footer />     
+        <Footer t={t} />
         {showModal && (
           <RequestModal 
             factoryName={activeService} 
