@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import { FaSearch, FaPhone, FaGlobe } from "react-icons/fa";
+import { FaSearch, FaPhone } from "react-icons/fa";
 import Prices from "./Prices";
 import Contact from "./Contact";
 import Agrodan from "./factories/Agrodan";
@@ -19,6 +19,7 @@ import FactoryAgromix from "./factories/FactoryAgromix";
 import FactoryShahristan from "./factories/FactoryShahristan";
 import FactoryAgrofood from "./factories/FactoryAgrofood";
 import RequestModal from "./components/RequestModal";
+import Footer from "./components/Footer";
 import "./App.css";
 import { locales } from "./locales";
 
@@ -157,25 +158,7 @@ function App() {
             <Route path="/factory/agrofood" element={<FactoryAgrofood />} />
           </Routes>
         </main>
-        <footer>
-          <div className="footer-columns">
-            <div className="footer-column">
-              <div className="footer-heading">{t.footer.contacts}</div>
-              <div><FaPhone /> {t.hero.phone}</div>
-              <div><FaGlobe /> www.SKYVISION.kz</div>
-            </div>
-            <div className="footer-column">
-              <div className="footer-heading">{t.footer.navigation}</div>
-              <Link to="/" className="footer-link">{t.nav.main}</Link>
-              <Link to="/prices" className="footer-link">{t.nav.prices}</Link>
-              <Link to="/contact" className="footer-link">{t.nav.contact}</Link>
-            </div>
-          </div>
-          <div className="footer-bottom">
-            <span>© 2025 SKYVISION. {t.footer.rights}</span>
-            <span>{t.footer.dev}</span>
-          </div>
-        </footer>
+        <Footer />
         {showModal && (
           <RequestModal 
             factoryName={activeService} 
