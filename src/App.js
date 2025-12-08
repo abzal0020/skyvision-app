@@ -23,6 +23,18 @@ import Footer from "./components/Footer";
 import "./App.css";
 import { locales } from "./locales";
 
+const DEFAULT_TEL_HREF = "+77471654092";
+
+function slugifyFactoryName(name = "") {
+  // lowercase, replace spaces with hyphens, remove non-alphanumeric/hyphen/underscore
+  return name
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^\w\-]/g, ""); // keep letters, numbers, underscore and hyphen
+}
+
 function Home({ t, openModal }) {
   const services = [
     { icon: "🚆", title: t.services.train, desc: t.services.trainDesc },
@@ -47,7 +59,10 @@ function Home({ t, openModal }) {
             {t.hero.request}
           </button>
           <div className="hero-phone">
-            <FaPhone /> {t.hero.phone}
+            <FaPhone />{" "}
+            <a href={`tel:${DEFAULT_TEL_HREF}`} className="hero-phone-link" aria-label={`Позвонить ${t.hero.phone}`}>
+              {t.hero.phone}
+            </a>
           </div>
         </div>
       </section>
@@ -87,7 +102,11 @@ function Home({ t, openModal }) {
         <h2 className="section-title">{t.factories.title}</h2>
         <div className="factories-grid">
           {popularFactories.map((factory, idx) => (
-            <Link to={`/factory/${factory.name.toLowerCase()}`} className="factory-card" key={idx}>
+            <Link
+              to={`/factory/${slugifyFactoryName(factory.name)}`}
+              className="factory-card"
+              key={idx}
+            >
               {factory.name}
             </Link>
           ))}
@@ -118,10 +137,12 @@ function App() {
             <Link to="/prices">{t.nav.prices}</Link>
             <Link to="/contact">{t.nav.contact}</Link>
           </nav>
-          <div className="header-contacts">
+
+          <a className="header-contacts" href={`tel:${DEFAULT_TEL_HREF}`} aria-label={`Позвонить ${t.hero.phone}`}>
             <FaPhone />
             <span>{t.hero.phone}</span>
-          </div>
+          </a>
+
           <button className="search-btn">
             <FaSearch />
           </button>
@@ -158,11 +179,13 @@ function App() {
             <Route path="/factory/agrofood" element={<FactoryAgrofood />} />
           </Routes>
         </main>
-         <Footer />     
+
+        <Footer />
+
         {showModal && (
-          <RequestModal 
-            factoryName={activeService} 
-            onClose={() => setShowModal(false)} 
+          <RequestModal
+            factoryName={activeService}
+            onClose={() => setShowModal(false)}
             t={t}
           />
         )}
