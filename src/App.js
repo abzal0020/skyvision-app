@@ -158,7 +158,7 @@ function App() {
             <Route path="/factory/agrofood" element={<FactoryAgrofood />} />
           </Routes>
         </main>
-        <Footer />
+        <Footer t={t} />
         {showModal && (
           <RequestModal 
             factoryName={activeService} 
