@@ -118,10 +118,10 @@ function App() {
             <Link to="/prices">{t.nav.prices}</Link>
             <Link to="/contact">{t.nav.contact}</Link>
           </nav>
-          <div className="header-contacts">
+          <a className="header-contacts" href="tel:+77471654092" aria-label={`Позвонить ${t.hero.phone}`}>
             <FaPhone />
             <span>{t.hero.phone}</span>
-          </div>
+          </a>
           <button className="search-btn">
             <FaSearch />
           </button>
