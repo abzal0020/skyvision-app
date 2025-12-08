@@ -2,13 +2,21 @@ import React from "react";
 import "./Footer.css";
 
 export default function Footer() {
+  // Телефон в международном формате для tel: ссылки
+  const telHref = "+77471654092"; // +7 747 165 40 92
+  const telDisplay = "8 (747) 165-40-92";
+
   return (
     <footer className="site-footer">
       <div className="footer-inner">
         <div className="footer-col left">
           <h4>Контакты</h4>
-          <div className="contact-line">📞 8 (747) 165-40-92</div>
-          <div className="contact-line">🌐 www.SKYVISION.kz</div>
+          <a className="contact-line" href={`tel:${telHref}`} aria-label={`Позвонить ${telDisplay}`}>
+            📞 {telDisplay}
+          </a>
+          <a className="contact-line" href="https://www.SKYVISION.kz" target="_blank" rel="noopener noreferrer" aria-label="Перейти на сайт SKYVISION">
+            🌐 www.SKYVISION.kz
+          </a>
         </div>
 
         <div className="footer-col center">
