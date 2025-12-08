@@ -22,13 +22,13 @@ export default function Footer({ t }) {
         </div>
 
         <div className="footer-col right">
-          {/* Можно добавить соцсети или логотип */}
+          {/* Can add social media or logo */}
         </div>
-      </div>
 
-      <div className="footer-bottom">
-        <div>© 2025 SKYVISION. {t.footer.rights}</div>
-        <div className="developer">{t.footer.dev}</div>
+        <div className="footer-bottom">
+          <div>© 2025 SKYVISION. {t.footer.rights}</div>
+          <div className="developer">{t.footer.dev}</div>
+        </div>
       </div>
     </footer>
   );
