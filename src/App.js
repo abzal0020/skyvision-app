@@ -20,19 +20,19 @@ import FactoryShahristan from "./factories/FactoryShahristan";
 import FactoryAgrofood from "./factories/FactoryAgrofood";
 import RequestModal from "./components/RequestModal";
 import Footer from "./components/Footer";
+import FloatingWhatsApp from "./components/FloatingWhatsApp";
 import "./App.css";
 import { locales } from "./locales";
 
 const DEFAULT_TEL_HREF = "+77471654092";
 
 function slugifyFactoryName(name = "") {
-  // lowercase, replace spaces with hyphens, remove non-alphanumeric/hyphen/underscore
   return name
     .toString()
     .toLowerCase()
     .trim()
     .replace(/\s+/g, "-")
-    .replace(/[^\w\-]/g, ""); // keep letters, numbers, underscore and hyphen
+    .replace(/[^\w\-]/g, "");
 }
 
 function Home({ t, openModal }) {
@@ -152,6 +152,7 @@ function App() {
             >中文</button>
           </div>
         </header>
+
         <main className="main">
           <Routes>
             <Route path="/" element={<Home t={t} openModal={openModal} />} />
@@ -176,6 +177,9 @@ function App() {
         </main>
 
         <Footer />
+
+        {/* Плавающая кнопка WhatsApp — ставим внутри app-wrapper, чтобы она была видна на всех страницах */}
+        <FloatingWhatsApp message={"Здравствуйте! Интересует заявка по продукту/логистике."} />
 
         {showModal && (
           <RequestModal
