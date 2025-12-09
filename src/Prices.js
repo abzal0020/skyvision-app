@@ -26,20 +26,57 @@ export default function Prices({ t }) {
   const [isAdmin, setIsAdmin] = useState(false);
 
   // Загрузка фабрик + прайсов
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      setLoading(true);
+useEffect(() => {
+  let mounted = true;
+  (async () => {
+    setLoading(true);
+    try {
+      // Узнаём пользователя и роль
+      let user = null;
       try {
-        // Узнаём пользователя и роль
-        let user = null;
+        const { data: userData } = await supabase.auth.getUser();
+        user = userData?.user ?? null;
+      } catch (e) {
+        user = null;
+      }
+
+      let admin = false;
+      if (user) {
         try {
-          const { data: userData } = await supabase.auth.getUser();
-          user = userData?.user ?? null;
+          const { data: profile, error: profErr } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+          if (!profErr && profile?.role === 'admin') admin = true;
         } catch (e) {
-          // ignore - unauthenticated
-          user = null;
+          admin = false;
         }
+      }
+      if (!mounted) return;
+      setIsAdmin(admin);
+
+      // Запрос фабрик: если не админ — только published = true
+      let query = supabase
+        .from('factories')
+        .select('id, name, slug, city, published, factory_prices(id, title, price, currency)');
+
+      if (!admin) {
+        query = query.eq('published', true);
+      }
+
+      const { data, error } = await query.order('name', { ascending: true });
+      if (error) throw error;
+      if (mounted) setFactories(data || []);
+    } catch (err) {
+      console.error('Failed to load factories:', err);
+      if (mounted) setFactories([]);
+    } finally {
+      if (mounted) setLoading(false);
+    }
+  })();
+  return () => { mounted = false; };
+}, []);
 
         let admin = false;
         if (user) {
