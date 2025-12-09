@@ -8,7 +8,16 @@ import {
 } from "react-icons/fa";
 // Подстройте путь к вашему supabaseClient:
 import { supabase } from "./lib/supabaseClient"; // <-- если файл в src/lib/supabaseClient.js
-// если supabaseClient находится в src/, замените на: import { supabase } from "./supabaseClient";
+
+// Импорт стилей из отдельного модуля
+import {
+  pageStyle, headerStyle, titleStyle, subtitleStyle, cardStyle, controlsStyle,
+  mobileFilterButtonStyle, mobileFiltersStyle, filterGroupStyle, labelStyle,
+  selectWrapperStyle, selectStyle, tableContainerStyle, tableStyle, mobileTableStyle,
+  thStyle, thContentStyle, trStyle, trAltStyle, expandedTrStyle, tdStyle, linkStyle,
+  bestBadgeStyle, detailsRowStyle, detailsCellStyle, detailsContentStyle, orderButtonStyle,
+  summaryStyle, mobileSummaryStyle, summaryItemStyle
+} from "./pricesStyles";
 
 export default function Prices({ t }) {
   const navigate = useNavigate();
