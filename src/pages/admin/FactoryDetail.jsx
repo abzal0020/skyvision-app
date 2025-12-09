@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { uploadFile, deleteFile } from '../../lib/storageHelper';
 import { v4 as uuidv4 } from 'uuid';
 
-const BUCKET = 'factory-files'; // убедись, что такой bucket создан в Supabase Storage
+const BUCKET = 'factory-files';
 
 export default function FactoryDetail() {
   const { id } = useParams();
@@ -13,11 +13,15 @@ export default function FactoryDetail() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState(null);
 
-  // поля для редактирования
+  // factory fields
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
+  const [city, setCity] = useState('');
   const [description, setDescription] = useState('');
   const [published, setPublished] = useState(false);
+  const [minOrder, setMinOrder] = useState('');
+  const [paymentTerms, setPaymentTerms] = useState('');
+  const [logistics, setLogistics] = useState(''); // per-factory logistics (optional)
 
   // price form
   const [priceTitle, setPriceTitle] = useState('');
@@ -41,14 +45,18 @@ export default function FactoryDetail() {
         .maybeSingle();
       if (error) throw error;
       if (!data) {
-        setMessage({ type: 'error', text: 'Фабрика не найдена' });
         setFactory(null);
+        setMessage({ type: 'error', text: 'Фабрика не найдена' });
       } else {
         setFactory(data);
         setName(data.name || '');
         setSlug(data.slug || '');
+        setCity(data.city || '');
         setDescription(data.description || '');
         setPublished(Boolean(data.published));
+        setMinOrder(data.min_order || '');
+        setPaymentTerms(data.payment_terms || '');
+        setLogistics(data.logistics ?? '');
       }
     } catch (err) {
       setMessage({ type: 'error', text: err.message || String(err) });
@@ -66,8 +74,12 @@ export default function FactoryDetail() {
         .update({
           name: name.trim(),
           slug: slug.trim(),
+          city: city || null,
           description,
-          published
+          published,
+          min_order: minOrder === '' ? null : Number(minOrder),
+          payment_terms: paymentTerms || null,
+          logistics: logistics === '' ? null : Number(logistics)
         })
         .eq('id', id);
       if (error) throw error;
@@ -97,6 +109,24 @@ export default function FactoryDetail() {
       if (error) throw error;
       setPriceTitle(''); setPriceValue(''); setPriceCurrency('USD');
       setMessage({ type: 'success', text: 'Прайс добавлен' });
+      await loadFactory();
+    } catch (err) {
+      setMessage({ type: 'error', text: err.message || String(err) });
+    }
+  }
+
+  async function handleUpdatePrice(priceId, newTitle, newPrice, newCurrency) {
+    try {
+      const { error } = await supabase
+        .from('factory_prices')
+        .update({
+          title: newTitle,
+          price: newPrice === '' ? null : Number(newPrice),
+          currency: newCurrency
+        })
+        .eq('id', priceId);
+      if (error) throw error;
+      setMessage({ type: 'success', text: 'Прайс обновлён' });
       await loadFactory();
     } catch (err) {
       setMessage({ type: 'error', text: err.message || String(err) });
@@ -177,20 +207,44 @@ export default function FactoryDetail() {
           <label>Название</label><br />
           <input value={name} onChange={(e) => setName(e.target.value)} required />
         </div>
+
         <div>
           <label>Slug</label><br />
           <input value={slug} onChange={(e) => setSlug(e.target.value)} required />
         </div>
+
+        <div>
+          <label>Город</label><br />
+          <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Костанай" />
+        </div>
+
         <div>
           <label>Описание</label><br />
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} />
         </div>
+
+        <div>
+          <label>Минимальный заказ (тонн)</label><br />
+          <input type="number" value={minOrder} onChange={(e) => setMinOrder(e.target.value)} />
+        </div>
+
+        <div>
+          <label>Условия оплаты</label><br />
+          <input value={paymentTerms} onChange={(e) => setPaymentTerms(e.target.value)} placeholder="50% предоплата" />
+        </div>
+
+        <div>
+          <label>Логистика (тут можно задать логистику по фабрике, если используется)</label><br />
+          <input type="number" value={logistics} onChange={(e) => setLogistics(e.target.value)} placeholder="38" />
+        </div>
+
         <div>
           <label>
             <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} />
-            Опубликовано
+            Опубликовано (видимо на /prices)
           </label>
         </div>
+
         <div style={{ marginTop: 8 }}>
           <button type="submit">Сохранить</button>
         </div>
@@ -208,9 +262,46 @@ export default function FactoryDetail() {
 
       <ul>
         {factory.factory_prices?.map(p => (
-          <li key={p.id}>
-            {p.title} — {p.price ?? '—'} {p.currency || ''}
-            {' '}
+          <li key={p.id} style={{ marginBottom: 8 }}>
+            <input
+              style={{ width: 220 }}
+              value={p.title}
+              onChange={(e) => {
+                // локально меняем объект, не сохраняем до нажатия Update
+                setFactory(prev => ({
+                  ...prev,
+                  factory_prices: prev.factory_prices.map(x => x.id === p.id ? { ...x, title: e.target.value } : x)
+                }));
+              }}
+            />
+            <input
+              style={{ width: 120, marginLeft: 8 }}
+              value={p.price ?? ''}
+              onChange={(e) => {
+                setFactory(prev => ({
+                  ...prev,
+                  factory_prices: prev.factory_prices.map(x => x.id === p.id ? { ...x, price: e.target.value } : x)
+                }));
+              }}
+            />
+            <input
+              style={{ width: 80, marginLeft: 8 }}
+              value={p.currency || ''}
+              onChange={(e) => {
+                setFactory(prev => ({
+                  ...prev,
+                  factory_prices: prev.factory_prices.map(x => x.id === p.id ? { ...x, currency: e.target.value } : x)
+                }));
+              }}
+            />
+            <button
+              style={{ marginLeft: 8 }}
+              onClick={async () => {
+                // Берём текущие значения из factory.state и отправляем update
+                const curr = factory.factory_prices.find(x => x.id === p.id);
+                await handleUpdatePrice(p.id, curr.title, curr.price, curr.currency);
+              }}
+            >Update</button>
             <button onClick={() => handleDeletePrice(p.id)} style={{ marginLeft: 8 }}>Удалить</button>
           </li>
         )) || <li>Нет прайсов</li>}
