@@ -191,208 +191,210 @@ function RequestModal({ factoryName, onClose, t = {} }) {
   return (
     <div className="rm-backdrop" onClick={() => { if (!sending) onClose && onClose(); }}>
       <div className="rm-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="rm-title">
-        <button
-          className="rm-close"
-          onClick={() => { if (!sending) onClose && onClose(); }}
-          aria-label="Закрыть"
-        >
-          &#10005;
-        </button>
+        <div className="rm-inner">
+          <button
+            className="rm-close"
+            onClick={() => { if (!sending) onClose && onClose(); }}
+            aria-label="Закрыть"
+          >
+            &#10005;
+          </button>
 
-        <h2 id="rm-title" className="rm-title">{modalTitle} {modalFactory ? `• ${modalFactory}` : ""}</h2>
+          <h2 id="rm-title" className="rm-title">{modalTitle} {modalFactory ? `• ${modalFactory}` : ""}</h2>
 
-        <div className="rm-steps-bar" aria-hidden>
-          {(modal.steps || ["Данные", "Дата", "Проверка"]).map((label, i) => (
-            <div key={label} className={`rm-step${step === i ? " active" : ""}${step > i ? " done" : ""}`}>
-              <span className="rm-step-num">{i + 1}</span>
-              <span className="rm-step-label">{label}</span>
-            </div>
-          ))}
-        </div>
-
-        {success ? (
-          <div className="rm-success">
-            <h3>✅ Заявка отправлена</h3>
-            <p>Спасибо! Мы свяжемся с вами в ближайшее время.</p>
-            <div style={{ marginTop: 12 }}>
-              <button className="rm-btn rm-btn-whatsapp" onClick={openWhatsApp}>
-                {WA_ICON} <span>Написать в WhatsApp</span>
-              </button>
-            </div>
+          <div className="rm-steps-bar" aria-hidden>
+            {(modal.steps || ["Данные", "Дата", "Проверка"]).map((label, i) => (
+              <div key={label} className={`rm-step${step === i ? " active" : ""}${step > i ? " done" : ""}`}>
+                <span className="rm-step-num">{i + 1}</span>
+                <span className="rm-step-label">{label}</span>
+              </div>
+            ))}
           </div>
-        ) : (
-          <>
-            {step === 0 && (
-              <form className="rm-form" onSubmit={(e) => { e.preventDefault(); next(); }}>
-                <div className="rm-field">
-                  <input
-                    name="name"
-                    value={form.name}
-                    onChange={handle}
-                    placeholder={modal.name || "Имя"}
-                    className={`rm-input ${errors.name ? "invalid" : ""}`}
-                    autoFocus
-                    aria-invalid={!!errors.name}
-                    aria-describedby={errors.name ? "err-name" : undefined}
-                  />
-                  {errors.name && <div id="err-name" className="rm-error">{errors.name}</div>}
-                </div>
 
-                <div className="rm-field">
-                  <input
-                    name="phone"
-                    value={formatPhoneForDisplay(form.phone)}
-                    onChange={handle}
-                    placeholder={modal.phone || "Телефон"}
-                    className={`rm-input ${errors.phone ? "invalid" : ""}`}
-                    aria-invalid={!!errors.phone}
-                    aria-describedby={errors.phone ? "err-phone" : undefined}
-                  />
-                  {errors.phone && <div id="err-phone" className="rm-error">{errors.phone}</div>}
-                </div>
-
-                <div className="rm-field">
-                  <input
-                    name="wechat"
-                    value={form.wechat}
-                    onChange={handle}
-                    placeholder={modal.wechat || "WeChat"}
-                    className="rm-input"
-                  />
-                </div>
-
-                <div className="rm-field">
-                  <select name="city" value={form.city} onChange={handle} className="rm-input">
-                    <option>Костанай</option>
-                    <option>Рудный</option>
-                  </select>
-                </div>
-
-                <div className="rm-field">
-                  <select name="cargo" value={form.cargo} onChange={handle} className="rm-input">
-                    <option>Кормовая мука</option>
-                    <option>Ячмень</option>
-                  </select>
-                </div>
-
-                <div className="rm-field">
-                  <select name="station" value={form.station} onChange={handle} className="rm-input">
-                    <option>Хоргос</option>
-                    <option>Алтынколь</option>
-                  </select>
-                </div>
-
-                <div className="rm-field">
-                  <select name="planGU" value={form.planGU} onChange={handle} className="rm-input">
-                    <option>с планом ГУ</option>
-                    <option>без плана</option>
-                  </select>
-                </div>
-              </form>
-            )}
-
-            {step === 1 && (
-              <div className="rm-form">
-                <label className="rm-label">{modal.date || "Дата"}</label>
-                <input
-                  type="date"
-                  name="date"
-                  min={today}
-                  value={form.date}
-                  onChange={handle}
-                  className={`rm-input ${errors.date ? "invalid" : ""}`}
-                  aria-invalid={!!errors.date}
-                  aria-describedby={errors.date ? "err-date" : undefined}
-                />
-                {errors.date && <div id="err-date" className="rm-error">{errors.date}</div>}
+          {success ? (
+            <div className="rm-success">
+              <h3>✅ Заявка отправлена</h3>
+              <p>Спасибо! Мы свяжемся с вами в ближайшее время.</p>
+              <div style={{ marginTop: 12 }}>
+                <button className="rm-btn rm-btn-whatsapp" onClick={openWhatsApp}>
+                  {WA_ICON} <span>Написать в WhatsApp</span>
+                </button>
               </div>
-            )}
+            </div>
+          ) : (
+            <>
+              {step === 0 && (
+                <form className="rm-form" onSubmit={(e) => { e.preventDefault(); next(); }}>
+                  <div className="rm-field">
+                    <input
+                      name="name"
+                      value={form.name}
+                      onChange={handle}
+                      placeholder={modal.name || "Имя"}
+                      className={`rm-input ${errors.name ? "invalid" : ""}`}
+                      autoFocus
+                      aria-invalid={!!errors.name}
+                      aria-describedby={errors.name ? "err-name" : undefined}
+                    />
+                    {errors.name && <div id="err-name" className="rm-error">{errors.name}</div>}
+                  </div>
 
-            {step === 2 && (
-              <div className="rm-review" aria-live="polite">
-                {Object.entries({
-                  [modal.name || "Имя"]: form.name,
-                  [modal.phone || "Телефон"]: formatPhoneForDisplay(form.phone),
-                  [modal.wechat || "WeChat"]: form.wechat,
-                  [modal.city || "Город"]: form.city,
-                  [modal.cargo || "Груз"]: form.cargo,
-                  [modal.station || "Станция"]: form.station,
-                  [modal.planGU || "План ГУ"]: form.planGU,
-                  [modal.date || "Дата"]: form.date,
-                }).map(([k, v]) => (
-                  <p key={k}><strong>{k}:</strong> {v}</p>
-                ))}
-                {errors.submit && <div className="rm-error" role="alert">{errors.submit}</div>}
+                  <div className="rm-field">
+                    <input
+                      name="phone"
+                      value={formatPhoneForDisplay(form.phone)}
+                      onChange={handle}
+                      placeholder={modal.phone || "Телефон"}
+                      className={`rm-input ${errors.phone ? "invalid" : ""}`}
+                      aria-invalid={!!errors.phone}
+                      aria-describedby={errors.phone ? "err-phone" : undefined}
+                    />
+                    {errors.phone && <div id="err-phone" className="rm-error">{errors.phone}</div>}
+                  </div>
 
-                <div style={{ marginTop: 10, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                  <label style={{ fontSize: "0.9rem", color: "#444", marginRight: 6 }}>Цель сообщения:</label>
-                  <select
-                    value={waReason}
-                    onChange={(e) => setWaReason(e.target.value)}
-                    className="rm-input"
-                    style={{ width: "auto", minWidth: 200 }}
-                    aria-label="Цель сообщения в WhatsApp"
-                  >
-                    {waReasons.map(r => <option key={r} value={r}>{r}</option>)}
-                  </select>
+                  <div className="rm-field">
+                    <input
+                      name="wechat"
+                      value={form.wechat}
+                      onChange={handle}
+                      placeholder={modal.wechat || "WeChat"}
+                      className="rm-input"
+                    />
+                  </div>
+
+                  <div className="rm-field">
+                    <select name="city" value={form.city} onChange={handle} className="rm-input">
+                      <option>Костанай</option>
+                      <option>Рудный</option>
+                    </select>
+                  </div>
+
+                  <div className="rm-field">
+                    <select name="cargo" value={form.cargo} onChange={handle} className="rm-input">
+                      <option>Кормовая мука</option>
+                      <option>Ячмень</option>
+                    </select>
+                  </div>
+
+                  <div className="rm-field">
+                    <select name="station" value={form.station} onChange={handle} className="rm-input">
+                      <option>Хоргос</option>
+                      <option>Алтынколь</option>
+                    </select>
+                  </div>
+
+                  <div className="rm-field">
+                    <select name="planGU" value={form.planGU} onChange={handle} className="rm-input">
+                      <option>с планом ГУ</option>
+                      <option>без плана</option>
+                    </select>
+                  </div>
+                </form>
+              )}
+
+              {step === 1 && (
+                <div className="rm-form">
+                  <label className="rm-label">{modal.date || "Дата"}</label>
+                  <input
+                    type="date"
+                    name="date"
+                    min={today}
+                    value={form.date}
+                    onChange={handle}
+                    className={`rm-input ${errors.date ? "invalid" : ""}`}
+                    aria-invalid={!!errors.date}
+                    aria-describedby={errors.date ? "err-date" : undefined}
+                  />
+                  {errors.date && <div id="err-date" className="rm-error">{errors.date}</div>}
                 </div>
+              )}
 
-                <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                  <button
-                    onClick={submit}
-                    disabled={sending}
-                    className="rm-btn rm-btn-blue"
-                    type="button"
-                  >
-                    {sending ? "Отправка..." : (modal.submit || "Отправить")}
-                  </button>
+              {step === 2 && (
+                <div className="rm-review" aria-live="polite">
+                  {Object.entries({
+                    [modal.name || "Имя"]: form.name,
+                    [modal.phone || "Телефон"]: formatPhoneForDisplay(form.phone),
+                    [modal.wechat || "WeChat"]: form.wechat,
+                    [modal.city || "Город"]: form.city,
+                    [modal.cargo || "Груз"]: form.cargo,
+                    [modal.station || "Станция"]: form.station,
+                    [modal.planGU || "План ГУ"]: form.planGU,
+                    [modal.date || "Дата"]: form.date,
+                  }).map(([k, v]) => (
+                    <p key={k}><strong>{k}:</strong> {v}</p>
+                  ))}
+                  {errors.submit && <div className="rm-error" role="alert">{errors.submit}</div>}
 
-                  <button
-                    onClick={openWhatsApp}
-                    disabled={sending}
-                    className="rm-btn rm-btn-whatsapp"
-                    type="button"
-                  >
-                    {WA_ICON} <span>Написать в WhatsApp</span>
-                  </button>
+                  <div style={{ marginTop: 10, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                    <label style={{ fontSize: "0.9rem", color: "#444", marginRight: 6 }}>Цель сообщения:</label>
+                    <select
+                      value={waReason}
+                      onChange={(e) => setWaReason(e.target.value)}
+                      className="rm-input"
+                      style={{ width: "auto", minWidth: 200 }}
+                      aria-label="Цель сообщения в WhatsApp"
+                    >
+                      {waReasons.map(r => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                  </div>
+
+                  <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                    <button
+                      onClick={submit}
+                      disabled={sending}
+                      className="rm-btn rm-btn-blue"
+                      type="button"
+                    >
+                      {sending ? "Отправка..." : (modal.submit || "Отправить")}
+                    </button>
+
+                    <button
+                      onClick={openWhatsApp}
+                      disabled={sending}
+                      className="rm-btn rm-btn-whatsapp"
+                      type="button"
+                    >
+                      {WA_ICON} <span>Написать в WhatsApp</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            <div className="rm-btn-row" style={{ marginTop: 12 }}>
-              <button
-                onClick={() => { if (!sending) onClose && onClose(); }}
-                className="rm-btn rm-btn-grey"
-                type="button"
-                disabled={sending}
-              >
-                {modal.cancel || "Отмена"}
-              </button>
-
-              {step > 0 && (
+              <div className="rm-btn-row" style={{ marginTop: 12 }}>
                 <button
-                  onClick={back}
+                  onClick={() => { if (!sending) onClose && onClose(); }}
                   className="rm-btn rm-btn-grey"
                   type="button"
                   disabled={sending}
                 >
-                  {modal.back || "Назад"}
+                  {modal.cancel || "Отмена"}
                 </button>
-              )}
 
-              {step < 2 && (
-                <button
-                  onClick={next}
-                  disabled={!canNext()}
-                  className="rm-btn rm-btn-blue"
-                  type="button"
-                >
-                  {modal.next || "Далее"}
-                </button>
-              )}
-            </div>
-          </>
-        )}
+                {step > 0 && (
+                  <button
+                    onClick={back}
+                    className="rm-btn rm-btn-grey"
+                    type="button"
+                    disabled={sending}
+                  >
+                    {modal.back || "Назад"}
+                  </button>
+                )}
+
+                {step < 2 && (
+                  <button
+                    onClick={next}
+                    disabled={!canNext()}
+                    className="rm-btn rm-btn-blue"
+                    type="button"
+                  >
+                    {modal.next || "Далее"}
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
