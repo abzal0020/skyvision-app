@@ -9,13 +9,13 @@ import {
 import { supabase } from "./lib/supabaseClient";
 
 /*
-  Cleaned Prices component.
-  - No duplicate imports/variables.
-  - Uses Supabase when available; falls back to STATIC_FACTORIES for demo/offline.
-  - Includes city filter, sorting, responsive behavior, and RequestModal.
+  Cleaned Prices component:
+  - Removed duplicate imports/variables.
+  - Single isMobile state.
+  - Uses Supabase when available; falls back to STATIC_FACTORIES.
+  - Ensures price column is always shown on mobile.
 */
 
-// Static fallback data (used if DB returns no factories)
 const STATIC_FACTORIES = [
   { id: "s1", city: "Костанай", factory: "Agrodan KsT", price: 190, minOrder: 20, payment: "50% предоплата", slug: "agrodan" },
   { id: "s2", city: "Костанай", factory: "Mibeko", price: 195, minOrder: 25, payment: "50% предоплата", slug: "mibeko" },
@@ -92,7 +92,7 @@ export default function Prices({ t }) {
         if (mounted && Array.isArray(data) && data.length > 0) {
           setFactories(data);
         } else {
-          // If DB empty, keep factories empty and app will use static fallback
+          // keep factories empty so normalizedData will fall back to static data
           setFactories([]);
         }
       } catch (err) {
