@@ -189,7 +189,7 @@ export default function Prices({ t }) {
                   <label style={labelStyle}><FaChartLine /> {t.prices.filters}:</label>
                   <div style={selectWrapperStyle}>
                     <select
-continue
+
 
 /* --- стили (оставлены ваши текущие стили; вставьте их ниже или импортируйте из текущего файла) --- */
 /* ... все стили как в вашем оригинале (pageStyle, headerStyle, ...) ... */
