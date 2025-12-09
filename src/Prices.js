@@ -8,16 +8,6 @@ import {
 } from "react-icons/fa";
 import { supabase } from "./lib/supabaseClient";
 
-// Импорт стилей (положите styles в src/pricesStyles.js как обсуждали)
-import {
-  pageStyle, headerStyle, titleStyle, subtitleStyle, cardStyle, controlsStyle,
-  mobileFilterButtonStyle, mobileFiltersStyle, filterGroupStyle, labelStyle,
-  selectWrapperStyle, selectStyle, tableContainerStyle, tableStyle, mobileTableStyle,
-  thStyle, thContentStyle, trStyle, trAltStyle, expandedTrStyle, tdStyle, linkStyle,
-  bestBadgeStyle, detailsRowStyle, detailsCellStyle, detailsContentStyle, orderButtonStyle,
-  summaryStyle, mobileSummaryStyle, summaryItemStyle, tableContainerStyle as tcs
-} from "./pricesStyles";
-
 export default function Prices({ t }) {
   const navigate = useNavigate();
   const logistics = 38;
@@ -67,7 +57,7 @@ export default function Prices({ t }) {
         // Request factories including city
         let query = supabase
           .from("factories")
-          .select("id, name, slug, city, published, factory_prices(id, title, price, currency)");
+          .select("id, name, slug, city, published, min_order, payment_terms, factory_prices(id, title, price, currency)");
 
         if (!admin) query = query.eq("published", true);
 
@@ -101,17 +91,17 @@ export default function Prices({ t }) {
         factory: f.name,
         slug: f.slug,
         price: priceRec ? (priceRec.price ?? 0) : 0,
-        currency: priceRec ? (priceRec.currency || "") : "",
-        minOrder: f.min_order || 20,
-        payment: f.payment_terms || "50% предоплата"
+        currency: priceRec ? (priceRec.currency ?? "") : "",
+        minOrder: f.min_order ?? 20,
+        payment: f.payment_terms ?? "50% предоплата"
       };
     });
   }, [factories]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    if (typeof window !== "undefined") window.addEventListener("resize", handleResize);
+    return () => { if (typeof window !== "undefined") window.removeEventListener("resize", handleResize); };
   }, []);
 
   const filtered = useMemo(
@@ -264,9 +254,7 @@ export default function Prices({ t }) {
                   </React.Fragment>
                 );
               })}
-              {sorted.length === 0 && (
-                <tr><td colSpan={5} style={{ padding: 20, textAlign: "center" }}>Нет доступных фабрик</td></tr>
-              )}
+              {sorted.length === 0 && <tr><td colSpan={5} style={{ padding: 20, textAlign: "center" }}>Нет доступных фабрик</td></tr>}
             </tbody>
           </table>
         </div>
@@ -282,59 +270,13 @@ export default function Prices({ t }) {
   );
 }
 
-
-/* --- стили (оставлены ваши текущие стили; вставьте их ниже или импортируйте из текущего файла) --- */
-/* ... все стили как в вашем оригинале (pageStyle, headerStyle, ...) ... */
+/* --- стили (одна декларация, без дублирования) --- */
 const pageStyle = {
   background: "linear-gradient(to bottom, #f8f9fa, #e9ecef)",
   minHeight: "100vh",
   padding: "1rem",
   fontFamily: "'Roboto', sans-serif",
 };
-/* (остальные стили — скопируйте их из вашего текущего файла, они не изменились) */
-const headerStyle = { textAlign: "center", marginBottom: "1rem", maxWidth: "800px", margin: "0 auto 1rem" };
-const titleStyle = { fontSize: "clamp(1.5rem, 5vw, 2.2rem)", color: "#2c3e50", marginBottom: "0.5rem" };
-const subtitleStyle = { fontSize: "clamp(0.9rem, 3vw, 1.2rem)", color: "#7f8c8d" };
-const cardStyle = { background: "#fff", borderRadius: "12px", boxShadow: "0 5px 15px rgba(0,0,0,0.08)", padding: "1rem", maxWidth: "1200px", margin: "0 auto" };
-const controlsStyle = { display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "1rem" };
-const mobileFilterButtonStyle = { background: "#3498db", color: "white", border: "none", padding: "0.5rem 1rem", borderRadius: "6px", cursor: "pointer", fontWeight: "600", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" };
-const mobileFiltersStyle = { display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1rem", padding: "1rem", background: "#f8f9fa", borderRadius: "8px" };
-const filterGroupStyle = { flex: "1", minWidth: "150px" };
-const labelStyle = { display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem", fontWeight: 600, color: "#2c3e50", marginBottom: "0.5rem" };
-const selectWrapperStyle = { position: "relative" };
-const selectStyle = { width: "100%", padding: "0.6rem 0.8rem", borderRadius: "6px", border: "1px solid #ddd", backgroundColor: "#fff", fontSize: "0.9rem", appearance: "none", cursor: "pointer", boxShadow: "0 2px 5px rgba(0,0,0,0.05)" };
-const tableContainerStyle = { overflowX: "auto", borderRadius: "8px", border: "1px solid #eee", marginBottom: "1rem", WebkitOverflowScrolling: "touch" };
-const tableStyle = { width: "100%", borderCollapse: "collapse", minWidth: "800px", fontSize: "0.95rem" };
-const mobileTableStyle = { width: "100%", borderCollapse: "collapse", minWidth: "500px", fontSize: "0.85rem" };
-const thStyle = { background: "#f8f9fa", padding: "0.8rem", textAlign: "left", fontWeight: "600", color: "#7f8c8d", borderBottom: "2px solid #eee", cursor: "pointer", position: "sticky", top: 0 };
-const thContentStyle = { display: "flex", alignItems: "center", gap: "0.3rem" };
-const trStyle = { borderBottom: "1px solid #eee", cursor: "pointer" };
-const trAltStyle = { background: "#f8f9fa" };
-const expandedTrStyle = { background: "#e3f2fd" };
-const tdStyle = { padding: "0.8rem", textAlign: "center" };
-const linkStyle = { color: "#3498db", fontWeight: "500", textDecoration: "none" };
-const bestBadgeStyle = { position: "absolute", top: "-10px", right: "0", background: "#27ae60", color: "white", fontSize: "0.7rem", padding: "0.2rem 0.4rem", borderRadius: "12px", display: "flex", alignItems: "center", gap: "0.2rem", whiteSpace: "nowrap" };
-const detailsRowStyle = { background: "#f0f7ff" };
-const detailsCellStyle = { padding: "0" };
-const detailsContentStyle = { padding: "1rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "0.8rem", fontSize: "0.9rem" };
-const orderButtonStyle = { background: "#3498db", color: "white", border: "none", padding: "0.6rem 1rem", borderRadius: "6px", cursor: "pointer", fontWeight: "600", transition: "background 0.3s", gridColumn: "1 / -1", maxWidth: "250px", margin: "0.5rem auto 0", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", fontSize: "0.9rem" };
-const summaryStyle = { display: "flex", flexWrap: "wrap", gap: "1rem", marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid #eee" };
-const mobileSummaryStyle = { display: "flex", flexDirection: "column", gap: "0.8rem", marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid #eee", fontSize: "0.9rem" };
-const summaryItemStyle = { background: "#f8f9fa", padding: "0.8rem", borderRadius: "8px", flex: "1", minWidth: "150px", display: "flex", alignItems: "center", fontSize: "0.9rem" };
-
-/* --- стили (оставлены ваши текущие стили; вставьте их ниже или импортируйте из текущего файла) --- */
-/* ... все стили как в вашем оригинале (pageStyle, headerStyle, ...) ... */
-/* (копируйте стили из вашего текущего файла, они не изменились) */
-
-/* --- стили (оставлены ваши текущие стили; вставьте их ниже или импортируйте из текущего файла) --- */
-/* ... все стили как в вашем оригинале (pageStyle, headerStyle, ...) ... */
-const pageStyle = {
-  background: "linear-gradient(to bottom, #f8f9fa, #e9ecef)",
-  minHeight: "100vh",
-  padding: "1rem",
-  fontFamily: "'Roboto', sans-serif",
-};
-/* (остальные стили — скопируйте их из вашего текущего файла, они не изменились) */
 const headerStyle = { textAlign: "center", marginBottom: "1rem", maxWidth: "800px", margin: "0 auto 1rem" };
 const titleStyle = { fontSize: "clamp(1.5rem, 5vw, 2.2rem)", color: "#2c3e50", marginBottom: "0.5rem" };
 const subtitleStyle = { fontSize: "clamp(0.9rem, 3vw, 1.2rem)", color: "#7f8c8d" };
