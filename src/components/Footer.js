@@ -1,59 +1,65 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import "./Footer.css";
 
-export default function Footer({ t }) {
+/*
+  Clean Footer component.
+  - All imports/exports are at the top-level (fixes "import/export may only appear at the top level").
+  - Minimal, self-contained markup and inline styles so it won't rely on other files.
+  - Replace the existing src/components/Footer.js with this file.
+*/
+
 export default function Footer() {
-  const telHref = "+77471654092"; // международный формат для tel:
-  const telDisplay = "8 (747) 165-40-92";
-
   return (
-    <footer className="site-footer">
-      <div className="footer-inner">
-        <div className="footer-col left">
-          <h4>{t.footer.contacts}</h4>
-          <div className="contact-line">📞 {t.hero.phone}</div>
-          <div className="contact-line">🌐 www.SKYVISION.kz</div>
-          <h4>Контакты</h4>
-          <a
-            className="contact-line"
-            href={`tel:${telHref}`}
-            aria-label={`Позвонить ${telDisplay}`}
-          >
-            📞 {telDisplay}
-          </a>
-          <a
-            className="contact-line"
-            href="https://www.SKYVISION.kz"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Перейти на сайт SKYVISION"
-          >
-            🌐 www.SKYVISION.kz
-          </a>
+    <footer style={footerStyle}>
+      <div style={containerStyle}>
+        <div style={leftStyle}>
+          <strong>SkyVision</strong>
+          <div style={{ fontSize: 12, color: "#666" }}>© {new Date().getFullYear()}</div>
         </div>
 
-        <div className="footer-col center">
-          <h4>{t.footer.navigation}</h4>
-          <nav className="footer-nav">
-            <Link to="/">{t.nav.main}</Link>
-            <Link to="/prices">{t.nav.prices}</Link>
-            <Link to="/contact">{t.nav.contact}</Link>
-            <a href="/">Главная</a>
-            <a href="/prices">Цены</a>
-            <a href="/contact">Контакты</a>
-          </nav>
-        </div>
-
-        <div className="footer-col right">
-          {/* Can add social media or logo */}
-        </div>
-
-        <div className="footer-bottom">
-          <div>© 2025 SKYVISION. {t.footer.rights}</div>
-          <div className="developer">{t.footer.dev}</div>
-        </div>
+        <nav style={navStyle} aria-label="Footer navigation">
+          <Link to="/" style={linkStyle}>Home</Link>
+          <Link to="/prices" style={linkStyle}>Prices</Link>
+          <Link to="/contact" style={linkStyle}>Contact</Link>
+        </nav>
       </div>
     </footer>
   );
 }
+
+/* --- inline styles --- */
+const footerStyle = {
+  borderTop: "1px solid #eee",
+  padding: "1rem 0",
+  background: "#fafafa",
+  marginTop: "2rem"
+};
+
+const containerStyle = {
+  maxWidth: 1100,
+  margin: "0 auto",
+  padding: "0 1rem",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: "1rem"
+};
+
+const leftStyle = {
+  display: "flex",
+  flexDirection: "column",
+  gap: 4,
+  color: "#333"
+};
+
+const navStyle = {
+  display: "flex",
+  gap: "1rem",
+  alignItems: "center"
+};
+
+const linkStyle = {
+  color: "#3498db",
+  textDecoration: "none",
+  fontSize: 14
+};
