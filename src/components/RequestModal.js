@@ -276,7 +276,7 @@ function RequestModal({ factoryName, onClose, t = {} }) {
                   <div className="rm-field">
                     <select name="station" value={form.station} onChange={handle} className="rm-input">
                       <option>Хоргос</option>
-                      <option>Алтынколь Алашанкоу</option>
+                      <option> Алашанкоу</option>
                     </select>
                   </div>
                 </form>
