@@ -8,38 +8,38 @@ import {
 } from "react-icons/fa";
 import { supabase } from "./lib/supabaseClient";
 
-// стили импортируются из отдельного модуля
+// Импорт стилей (положите styles в src/pricesStyles.js как обсуждали)
 import {
   pageStyle, headerStyle, titleStyle, subtitleStyle, cardStyle, controlsStyle,
   mobileFilterButtonStyle, mobileFiltersStyle, filterGroupStyle, labelStyle,
   selectWrapperStyle, selectStyle, tableContainerStyle, tableStyle, mobileTableStyle,
   thStyle, thContentStyle, trStyle, trAltStyle, expandedTrStyle, tdStyle, linkStyle,
   bestBadgeStyle, detailsRowStyle, detailsCellStyle, detailsContentStyle, orderButtonStyle,
-  summaryStyle, mobileSummaryStyle, summaryItemStyle
+  summaryStyle, mobileSummaryStyle, summaryItemStyle, tableContainerStyle as tcs
 } from "./pricesStyles";
 
 export default function Prices({ t }) {
   const navigate = useNavigate();
   const logistics = 38;
 
-  const [factories, setFactories] = useState([]); // данные из БД
+  const [factories, setFactories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterCity, setCity] = useState("Все");
   const [sort, setSort] = useState({ field: "dap", asc: true });
   const [expandedRow, setExpandedRow] = useState(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [selectedFactory, setSelectedFactory] = useState("");
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth < 768 : false);
   const [showFilters, setShowFilters] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Загрузка фабрик + прайсов и определение роли
+  // Fetch factories and determine admin role
   useEffect(() => {
     let mounted = true;
     (async () => {
       setLoading(true);
       try {
-        // Узнаём пользователя и роль
+        // get user
         let user = null;
         try {
           const { data: userData } = await supabase.auth.getUser();
@@ -52,11 +52,11 @@ export default function Prices({ t }) {
         if (user) {
           try {
             const { data: profile, error: profErr } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('id', user.id)
+              .from("profiles")
+              .select("role")
+              .eq("id", user.id)
               .single();
-            if (!profErr && profile?.role === 'admin') admin = true;
+            if (!profErr && profile?.role === "admin") admin = true;
           } catch (e) {
             admin = false;
           }
@@ -64,56 +64,54 @@ export default function Prices({ t }) {
         if (!mounted) return;
         setIsAdmin(admin);
 
-        // Запрос фабрик: обязательно запрашиваем city
+        // Request factories including city
         let query = supabase
-          .from('factories')
-          .select('id, name, slug, city, published, factory_prices(id, title, price, currency)');
+          .from("factories")
+          .select("id, name, slug, city, published, factory_prices(id, title, price, currency)");
 
-        if (!admin) {
-          query = query.eq('published', true);
-        }
+        if (!admin) query = query.eq("published", true);
 
-        const { data, error } = await query.order('name', { ascending: true });
+        const { data, error } = await query.order("name", { ascending: true });
         if (error) throw error;
         if (mounted) setFactories(data || []);
       } catch (err) {
-        console.error('Failed to load factories:', err);
+        console.error("Failed to load factories:", err);
         if (mounted) setFactories([]);
       } finally {
         if (mounted) setLoading(false);
       }
     })();
+
     return () => { mounted = false; };
   }, []);
 
-  // Города на странице (вытаскиваем из загруженных данных, поле city может не существовать)
+  // Cities for filter
   const cityOptions = useMemo(() => {
-    const cities = [...new Set((factories || []).map(f => (f.city ?? '—')))].filter(Boolean);
+    const cities = [...new Set((factories || []).map(f => (f.city ?? "—")))].filter(Boolean);
     return ["Все", ...cities];
   }, [factories]);
 
-  // Подготовка массива для отображения
+  // Normalize rawData
   const rawData = useMemo(() => {
     return (factories || []).map(f => {
-      // выбираем "показательный" прайс: первый или null
       const priceRec = (f.factory_prices && f.factory_prices.length > 0) ? f.factory_prices[0] : null;
       return {
         id: f.id,
-        city: f.city || '—',
+        city: f.city || "—",
         factory: f.name,
         slug: f.slug,
         price: priceRec ? (priceRec.price ?? 0) : 0,
-        currency: priceRec ? (priceRec.currency || '') : '',
+        currency: priceRec ? (priceRec.currency || "") : "",
         minOrder: f.min_order || 20,
-        payment: f.payment_terms || '50% предоплата'
+        payment: f.payment_terms || "50% предоплата"
       };
     });
   }, [factories]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const filtered = useMemo(
@@ -132,13 +130,12 @@ export default function Prices({ t }) {
 
   const bestDAP = sorted.length ? Math.min(...sorted.map(r => r.price + logistics)) : 0;
 
-  const sortIcon = (field) =>
+  const sortIcon = field =>
     sort.field !== field ? <FaSort /> : sort.asc ? <FaSortUp /> : <FaSortDown />;
 
-  const toggleSort = (field) =>
-    setSort(prev => prev.field === field ? { field, asc: !prev.asc } : { field, asc: true });
+  const toggleSort = field => setSort(prev => prev.field === field ? { field, asc: !prev.asc } : { field, asc: true });
 
-  const toggleRow = (index) => setExpandedRow(expandedRow === index ? null : index);
+  const toggleRow = index => setExpandedRow(expandedRow === index ? null : index);
 
   const handleOrderClick = (factoryName, e) => {
     e.stopPropagation();
@@ -146,7 +143,6 @@ export default function Prices({ t }) {
     setShowOrderModal(true);
   };
 
-  // Edit button: переходим в админку по id (видна только админам)
   const handleEdit = (factoryId, e) => {
     e.stopPropagation();
     navigate(`/admin/factories/${factoryId}`);
@@ -160,13 +156,11 @@ export default function Prices({ t }) {
         <h1 style={titleStyle}>{t.prices.title}</h1>
         <p style={subtitleStyle}>{t.prices.subtitle}</p>
       </div>
+
       <div style={cardStyle}>
         {isMobile ? (
           <>
-            <button
-              style={mobileFilterButtonStyle}
-              onClick={() => setShowFilters(!showFilters)}
-            >
+            <button style={mobileFilterButtonStyle} onClick={() => setShowFilters(!showFilters)}>
               {showFilters ? <FaTimes /> : <FaBars />} {t.prices.filters}
             </button>
             {showFilters && (
@@ -174,21 +168,119 @@ export default function Prices({ t }) {
                 <div style={filterGroupStyle}>
                   <label style={labelStyle}><FaCity /> {t.prices.city}:</label>
                   <div style={selectWrapperStyle}>
-                    <select
-                      style={selectStyle}
-                      value={filterCity}
-                      onChange={e => setCity(e.target.value)}
-                    >
-                      {cityOptions.map(c => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
+                    <select style={selectStyle} value={filterCity} onChange={e => setCity(e.target.value)}>
+                      {cityOptions.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </div>
                 </div>
+
                 <div style={filterGroupStyle}>
                   <label style={labelStyle}><FaChartLine /> {t.prices.filters}:</label>
                   <div style={selectWrapperStyle}>
-                    <select
+                    <select style={selectStyle} value={sort.field} onChange={e => setSort(prev => ({ ...prev, field: e.target.value }))}>
+                      <option value="dap">{t.prices.dap}</option>
+                      <option value="price">{t.prices.warehouse}</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <div style={controlsStyle}>
+            <div style={filterGroupStyle}>
+              <label style={labelStyle}><FaCity /> {t.prices.city}:</label>
+              <div style={selectWrapperStyle}>
+                <select style={selectStyle} value={filterCity} onChange={e => setCity(e.target.value)}>
+                  {cityOptions.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div style={filterGroupStyle}>
+              <label style={labelStyle}><FaChartLine /> {t.prices.filters}:</label>
+              <div style={selectWrapperStyle}>
+                <select style={selectStyle} value={sort.field} onChange={e => setSort(prev => ({ ...prev, field: e.target.value }))}>
+                  <option value="dap">{t.prices.dap}</option>
+                  <option value="price">{t.prices.warehouse}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div style={tableContainerStyle}>
+          <table style={isMobile ? mobileTableStyle : tableStyle}>
+            <thead>
+              <tr>
+                <th style={thStyle} onClick={() => toggleSort("city")}>
+                  <div style={thContentStyle}>{!isMobile && <FaCity />} {t.prices.city} {sortIcon("city")}</div>
+                </th>
+                <th style={thStyle}>
+                  <div style={thContentStyle}>{!isMobile && <FaIndustry />} {t.prices.factory}</div>
+                </th>
+                <th style={thStyle} onClick={() => toggleSort("price")}>
+                  <div style={thContentStyle}>{!isMobile && <FaWarehouse />} {t.prices.warehouse} {sortIcon("price")}</div>
+                </th>
+                {!isMobile && <th style={thStyle}><div style={thContentStyle}><FaShippingFast /> {t.prices.logistics}</div></th>}
+                <th style={{ ...thStyle, background: "#2c3e50" }} onClick={() => toggleSort("dap")}>
+                  <div style={{ ...thContentStyle, color: "white" }}>{!isMobile && <FaDollarSign />} {t.prices.dap} {sortIcon("dap")}</div>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {sorted.map((r, i) => {
+                const dap = r.price + logistics;
+                const best = dap === bestDAP;
+                const isExpanded = expandedRow === i;
+                return (
+                  <React.Fragment key={r.id + "_" + i}>
+                    <tr style={{ ...trStyle, ...(i % 2 ? trAltStyle : {}), ...(isExpanded ? expandedTrStyle : {}) }} onClick={() => toggleRow(i)}>
+                      <td style={tdStyle}>{r.city}</td>
+                      <td style={tdStyle}><Link to={`/factory/${r.slug}`} style={linkStyle}>{isMobile ? r.factory.split(" ")[0] : r.factory}</Link></td>
+                      <td style={tdStyle}>{r.price} {r.currency}</td>
+                      {!isMobile && <td style={tdStyle}>{logistics}</td>}
+                      <td style={{ ...tdStyle, fontWeight: 600, color: best ? "#27ae60" : "#2c3e50", position: "relative" }}>
+                        {dap}
+                        {best && <div style={bestBadgeStyle}><span style={{ marginRight: 4 }}><FaDollarSign /></span> {t.prices.best}</div>}
+                      </td>
+                    </tr>
+
+                    {isExpanded && (
+                      <tr style={detailsRowStyle}>
+                        <td colSpan={isMobile ? 4 : 5} style={detailsCellStyle}>
+                          <div style={detailsContentStyle}>
+                            <div><strong><FaBox /> {t.prices.minOrder}:</strong> {r.minOrder} {t.prices.amountUnit || "тонн"}</div>
+                            <div><strong><FaMoneyBillWave /> {t.prices.payment}:</strong> {r.payment}</div>
+
+                            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                              <button style={orderButtonStyle} onClick={(e) => handleOrderClick(r.factory, e)}><FaShoppingCart /> {t.prices.orderBtn}</button>
+                              {isAdmin && <button style={{ ...orderButtonStyle, background: "#34495e" }} onClick={(e) => handleEdit(r.id, e)}>{t.prices.editBtn || "Edit"}</button>}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+              {sorted.length === 0 && (
+                <tr><td colSpan={5} style={{ padding: 20, textAlign: "center" }}>Нет доступных фабрик</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div style={isMobile ? mobileSummaryStyle : summaryStyle}>
+          <div style={summaryItemStyle}><FaDollarSign style={{ color: "#27ae60", marginRight: "0.5rem" }} /><strong>{t.prices.best}:</strong> {bestDAP} $</div>
+          <div style={summaryItemStyle}><FaChartLine style={{ color: "#3498db", marginRight: "0.5rem" }} /><strong>{t.prices.avg}:</strong> {(rawData.reduce((sum, r) => sum + r.price, 0) / (rawData.length || 1) + logistics).toFixed(1)} $</div>
+        </div>
+      </div>
+
+      {showOrderModal && <RequestModal factoryName={selectedFactory} onClose={() => setShowOrderModal(false)} t={t} />}
+    </div>
+  );
+}
 
 
 /* --- стили (оставлены ваши текущие стили; вставьте их ниже или импортируйте из текущего файла) --- */
