@@ -1,7 +1,17 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import AdminAuth from '../../components/AdminAuth';
 import { v4 as uuidv4 } from 'uuid';
+
+function makeSlug(s = '') {
+  return s
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]/g, '');
+}
 
 export default function FactoriesPage() {
   const [user, setUser] = useState(null);
@@ -10,6 +20,7 @@ export default function FactoriesPage() {
   const [newName, setNewName] = useState('');
   const [newSlug, setNewSlug] = useState('');
   const [message, setMessage] = useState(null);
+  const navigate = useNavigate();
 
   const fetchFactories = useCallback(async () => {
     setLoading(true);
@@ -38,12 +49,12 @@ export default function FactoriesPage() {
       setMessage({ type: 'error', text: 'You must be signed in as admin to create a factory' });
       return;
     }
-    if (!newName || !newSlug) {
-      setMessage({ type: 'error', text: 'Name and slug required' });
+    if (!newName) {
+      setMessage({ type: 'error', text: 'Name required' });
       return;
     }
     try {
-      const slug = newSlug.trim();
+      const slug = newSlug ? makeSlug(newSlug) : makeSlug(newName);
       const { data, error } = await supabase
         .from('factories')
         .insert([{
@@ -60,7 +71,9 @@ export default function FactoriesPage() {
       setMessage({ type: 'success', text: 'Factory created' });
       await fetchFactories();
     } catch (err) {
-      setMessage({ type: 'error', text: err.message || 'Create failed' });
+      // Обработаем дубли slug (unique violation) и другие ошибки
+      const text = err?.message || String(err);
+      setMessage({ type: 'error', text });
     }
   }
 
@@ -96,11 +109,11 @@ export default function FactoriesPage() {
           <input value={newName} onChange={(e) => setNewName(e.target.value)} required />
         </div>
         <div>
-          <label>Slug (unique)</label><br />
-          <input value={newSlug} onChange={(e) => setNewSlug(e.target.value)} required />
+          <label>Slug (optional, unique)</label><br />
+          <input value={newSlug} onChange={(e) => setNewSlug(e.target.value)} />
         </div>
         <div style={{ marginTop: 8 }}>
-          <button type="submit">Create</button>
+          <button type="submit" disabled={loading}>Create</button>
         </div>
       </form>
 
@@ -123,7 +136,7 @@ export default function FactoriesPage() {
               <td>{String(f.published)}</td>
               <td>{f.created_at ? new Date(f.created_at).toLocaleString() : ''}</td>
               <td>
-                <button onClick={() => window.location.href = `/admin/factories/${f.id}`}>Open</button>
+                <button onClick={() => navigate(`/admin/factories/${f.id}`)}>Open</button>
                 {' '}
                 <button onClick={() => handleDelete(f.id)}>Delete</button>
               </td>
