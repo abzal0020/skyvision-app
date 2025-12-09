@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import { FaSearch, FaPhone, FaGlobe } from "react-icons/fa";
+import { FaSearch, FaPhone } from "react-icons/fa";
 import Prices from "./Prices";
 import Contact from "./Contact";
 import Agrodan from "./factories/Agrodan";
@@ -135,6 +135,10 @@ function App() {
             <Link to="/prices">{t.nav.prices}</Link>
             <Link to="/contact">{t.nav.contact}</Link>
           </nav>
+          <a className="header-contacts" href="tel:+77471654092" aria-label={`Позвонить ${t.hero.phone}`}>
+            <FaPhone />
+            <span>{t.hero.phone}</span>
+          </a>
 
           <a className="header-contacts" href={`tel:${DEFAULT_TEL_HREF}`} aria-label={`Позвонить ${t.hero.phone}`}>
             <FaPhone />
@@ -185,6 +189,7 @@ function App() {
             {/* при желании можно добавить /admin/factories/:id */}
           </Routes>
         </main>
+        <Footer t={t} />
 
         <Footer />
 
