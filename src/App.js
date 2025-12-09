@@ -25,6 +25,7 @@ import "./App.css";
 import { locales } from "./locales";
 
 // добавляем импорт админской страницы
+import FactoryDetail from "./pages/admin/FactoryDetail";
 import FactoriesPage from "./pages/admin/FactoriesPage";
 
 const DEFAULT_TEL_HREF = "+77471654092";
@@ -180,6 +181,7 @@ function App() {
 
             {/* <-- Добавленный маршрут для админки */}
             <Route path="/admin/factories" element={<FactoriesPage />} />
+            <Route path="/admin/factories/:id" element={<FactoryDetail />} />
             {/* при желании можно добавить /admin/factories/:id */}
           </Routes>
         </main>
