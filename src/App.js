@@ -24,6 +24,9 @@ import FloatingWhatsApp from "./components/FloatingWhatsApp";
 import "./App.css";
 import { locales } from "./locales";
 
+// добавляем импорт админской страницы
+import FactoriesPage from "./pages/admin/FactoriesPage";
+
 const DEFAULT_TEL_HREF = "+77471654092";
 
 function slugifyFactoryName(name = "") {
@@ -58,7 +61,6 @@ function Home({ t, openModal }) {
           <button className="btn-main" onClick={() => openModal(t.hero.request)}>
             {t.hero.request}
           </button>
-          {/* Номер удалён с главной страницы — оставлена только кнопка "Оставить заявку" */}
         </div>
       </section>
 
@@ -158,6 +160,8 @@ function App() {
             <Route path="/" element={<Home t={t} openModal={openModal} />} />
             <Route path="/prices" element={<Prices t={t} />} />
             <Route path="/contact" element={<Contact />} />
+
+            {/* клиентские factory страницы */}
             <Route path="/factory/agrodan" element={<Agrodan />} />
             <Route path="/factory/ibmo" element={<IBMO />} />
             <Route path="/factory/mibeko" element={<FactoryMibeko />} />
@@ -173,12 +177,15 @@ function App() {
             <Route path="/factory/agromix" element={<FactoryAgromix />} />
             <Route path="/factory/shahristan" element={<FactoryShahristan />} />
             <Route path="/factory/agrofood" element={<FactoryAgrofood />} />
+
+            {/* <-- Добавленный маршрут для админки */}
+            <Route path="/admin/factories" element={<FactoriesPage />} />
+            {/* при желании можно добавить /admin/factories/:id */}
           </Routes>
         </main>
 
         <Footer />
 
-        {/* Плавающая кнопка WhatsApp — ставим внутри app-wrapper, чтобы она была видна на всех страницах */}
         <FloatingWhatsApp message={"Здравствуйте! Интересует заявка по продукту/логистике."} />
 
         {showModal && (
