@@ -1,54 +1,21 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import RequestModal from "./components/RequestModal";
 import {
   FaSort, FaSortUp, FaSortDown,
   FaCity, FaIndustry, FaWarehouse, FaShippingFast, FaDollarSign,
   FaChartLine, FaBox, FaMoneyBillWave, FaShoppingCart, FaBars, FaTimes
 } from "react-icons/fa";
+// Подстройте путь к вашему supabaseClient:
+import { supabase } from "./lib/supabaseClient"; // <-- если файл в src/lib/supabaseClient.js
+// если supabaseClient находится в src/, замените на: import { supabase } from "./supabaseClient";
 
-// !!! Обязательно передавай проп t={t} из App.js !!!
 export default function Prices({ t }) {
+  const navigate = useNavigate();
   const logistics = 38;
-  const rawData = [
-    { city: "Костанай", factory: "Agrodan KsT", price: 190, minOrder: 20, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Mibeko", price: 195, minOrder: 25, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Khlebny Dom", price: 195, minOrder: 15, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Rahmat", price: 190, minOrder: 20, payment: "50% предоплата" },
-    { city: "Костанай", factory: "IBMO (Magomed)", price: 185, minOrder: 30, payment: "50% предоплата" },
-    { city: "Рудный", factory: "Rudni (Marat)", price: 200, minOrder: 15, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Brothers Agro", price: 195, minOrder: 20, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Agroplanet", price: 195, minOrder: 25, payment: "60% предоплата" },
-    { city: "Костанай", factory: "Romana", price: 195, minOrder: 20, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Best Kostanai (malik)", price: 195, minOrder: 30, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Vadisa m", price: 195, minOrder: 20, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Harvest (Azamat)", price: 205, minOrder: 15, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Agromix", price: 195, minOrder: 20, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Shahristan agro", price: 190, minOrder: 25, payment: "50% предоплата" },
-    { city: "Костанай", factory: "Agrofood export", price: 195, minOrder: 20, payment: "50% предоплата" },
-  ];
 
-  const links = {
-    "Agrodan KsT": "/factory/agrodan",
-    "Mibeko": "/factory/mibeko",
-    "Khlebny Dom": "/factory/khlebny-dom",
-    "Rahmat": "/factory/rahmat",
-    "IBMO (Magomed)": "/factory/ibmo",
-    "Rudni (Marat)": "/factory/rudni",
-    "Brothers Agro": "/factory/brothers-agro",
-    "Agroplanet": "/factory/agroplanet",
-    "Romana": "/factory/romana",
-    "Best Kostanai (malik)": "/factory/bestkostanai",
-    "Vadisa m": "/factory/vadisa",
-    "Harvest (Azamat)": "/factory/harvest",
-    "Agromix": "/factory/agromix",
-    "Shahristan agro": "/factory/shahristan",
-    "Agrofood export": "/factory/agrofood",
-  };
-
-  // Города на русском из данных, переводим только надписи
-  const cityOptions = ["Все", ...new Set(rawData.map(r => r.city))];
-
+  const [factories, setFactories] = useState([]); // данные из БД
+  const [loading, setLoading] = useState(true);
   const [filterCity, setCity] = useState("Все");
   const [sort, setSort] = useState({ field: "dap", asc: true });
   const [expandedRow, setExpandedRow] = useState(null);
@@ -56,6 +23,53 @@ export default function Prices({ t }) {
   const [selectedFactory, setSelectedFactory] = useState("");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Загрузка фабрик + прайсов (показываем только published = true)
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('factories')
+          .select('id, name, slug, city, published, factory_prices(id, title, price, currency)')
+          .eq('published', true)
+          .order('name', { ascending: true });
+        if (error) throw error;
+        if (mounted) setFactories(data || []);
+      } catch (err) {
+        console.error('Failed to load factories:', err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  // Города на странице (вытаскиваем из загруженных данных)
+  const cityOptions = useMemo(() => {
+    const cities = [...new Set(factories.map(f => f.city || '—'))].filter(Boolean);
+    return ["Все", ...cities];
+  }, [factories]);
+
+  // Подготовка rawData подобного массива из фактических данных
+  const rawData = useMemo(() => {
+    return factories.map(f => {
+      // выбираем "показательный" прайс: первый или null
+      const priceRec = (f.factory_prices && f.factory_prices.length > 0) ? f.factory_prices[0] : null;
+      return {
+        id: f.id,
+        city: f.city || '—',          // замените, если поле называется иначе
+        factory: f.name,
+        slug: f.slug,
+        price: priceRec ? (priceRec.price ?? 0) : 0,
+        currency: priceRec ? (priceRec.currency || '') : '',
+        // эти поля у вас, возможно, хранятся отдельно; пока дефолт:
+        minOrder: f.min_order || 20,
+        payment: f.payment_terms || '50% предоплата'
+      };
+    });
+  }, [factories]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -65,7 +79,7 @@ export default function Prices({ t }) {
 
   const filtered = useMemo(
     () => rawData.filter(r => filterCity === "Все" || r.city === filterCity),
-    [filterCity]
+    [rawData, filterCity]
   );
 
   const sorted = useMemo(() => {
@@ -77,7 +91,7 @@ export default function Prices({ t }) {
     });
   }, [filtered, sort]);
 
-  const bestDAP = Math.min(...rawData.map(r => r.price + logistics));
+  const bestDAP = sorted.length ? Math.min(...sorted.map(r => r.price + logistics)) : 0;
 
   const sortIcon = (field) =>
     sort.field !== field ? <FaSort /> : sort.asc ? <FaSortUp /> : <FaSortDown />;
@@ -92,6 +106,14 @@ export default function Prices({ t }) {
     setSelectedFactory(factoryName);
     setShowOrderModal(true);
   };
+
+  // Edit button: переходим в админку по id
+  const handleEdit = (factoryId, e) => {
+    e.stopPropagation();
+    navigate(`/admin/factories/${factoryId}`);
+  };
+
+  if (loading) return <div style={{ padding: 20 }}>Загрузка...</div>;
 
   return (
     <div style={pageStyle}>
@@ -211,7 +233,7 @@ export default function Prices({ t }) {
                 const best = dap === bestDAP;
                 const isExpanded = expandedRow === i;
                 return (
-                  <React.Fragment key={r.factory}>
+                  <React.Fragment key={r.id + '_' + i}>
                     <tr
                       style={{
                         ...trStyle,
@@ -222,15 +244,11 @@ export default function Prices({ t }) {
                     >
                       <td style={tdStyle}>{r.city}</td>
                       <td style={tdStyle}>
-                        {links[r.factory] ? (
-                          <Link to={links[r.factory]} style={linkStyle}>
-                            {isMobile ? r.factory.split(' ')[0] : r.factory}
-                          </Link>
-                        ) : (
-                          isMobile ? r.factory.split(' ')[0] : r.factory
-                        )}
+                        <Link to={`/factory/${r.slug}`} style={linkStyle}>
+                          {isMobile ? r.factory.split(' ')[0] : r.factory}
+                        </Link>
                       </td>
-                      <td style={tdStyle}>{r.price}</td>
+                      <td style={tdStyle}>{r.price} {r.currency}</td>
                       {!isMobile && <td style={tdStyle}>{logistics}</td>}
                       <td style={{
                         ...tdStyle,
@@ -256,12 +274,22 @@ export default function Prices({ t }) {
                             <div>
                               <strong><FaMoneyBillWave /> {t.prices.payment}:</strong> {r.payment}
                             </div>
-                            <button
-                              style={orderButtonStyle}
-                              onClick={(e) => handleOrderClick(r.factory, e)}
-                            >
-                              <FaShoppingCart /> {t.prices.orderBtn}
-                            </button>
+
+                            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                              <button
+                                style={orderButtonStyle}
+                                onClick={(e) => handleOrderClick(r.factory, e)}
+                              >
+                                <FaShoppingCart /> {t.prices.orderBtn}
+                              </button>
+
+                              <button
+                                style={{ ...orderButtonStyle, background: "#34495e" }}
+                                onClick={(e) => handleEdit(r.id, e)}
+                              >
+                                {t.prices.editBtn || "Edit"}
+                              </button>
+                            </div>
                           </div>
                         </td>
                       </tr>
@@ -269,6 +297,11 @@ export default function Prices({ t }) {
                   </React.Fragment>
                 );
               })}
+              {sorted.length === 0 && (
+                <tr>
+                  <td colSpan={5} style={{ padding: 20, textAlign: 'center' }}>Нет доступных фабрик</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -281,7 +314,7 @@ export default function Prices({ t }) {
           <div style={summaryItemStyle}>
             <FaChartLine style={{ color: "#3498db", marginRight: "0.5rem" }} />
             <strong>{t.prices.avg}:</strong>
-            {(rawData.reduce((sum, r) => sum + r.price, 0) / rawData.length + logistics).toFixed(1)} $
+            {(rawData.reduce((sum, r) => sum + r.price, 0) / (rawData.length || 1) + logistics).toFixed(1)} $
           </div>
         </div>
       </div>
@@ -297,331 +330,41 @@ export default function Prices({ t }) {
   );
 }
 
-// Все стили оставляй как есть, они идут ниже:
+/* --- стили (оставлены ваши текущие стили; вставьте их ниже или импортируйте из текущего файла) --- */
+/* ... все стили как в вашем оригинале (pageStyle, headerStyle, ...) ... */
 const pageStyle = {
   background: "linear-gradient(to bottom, #f8f9fa, #e9ecef)",
   minHeight: "100vh",
   padding: "1rem",
   fontFamily: "'Roboto', sans-serif",
 };
-
-const headerStyle = {
-  textAlign: "center",
-  marginBottom: "1rem",
-  maxWidth: "800px",
-  margin: "0 auto 1rem",
-};
-
-const titleStyle = {
-  fontSize: "clamp(1.5rem, 5vw, 2.2rem)",
-  color: "#2c3e50",
-  marginBottom: "0.5rem",
-};
-
-const subtitleStyle = {
-  fontSize: "clamp(0.9rem, 3vw, 1.2rem)",
-  color: "#7f8c8d",
-};
-
-const cardStyle = {
-  background: "#fff",
-  borderRadius: "12px",
-  boxShadow: "0 5px 15px rgba(0,0,0,0.08)",
-  padding: "1rem",
-  maxWidth: "1200px",
-  margin: "0 auto",
-};
-
-const controlsStyle = {
-  display: "flex",
-  flexWrap: "wrap",
-  gap: "1rem",
-  marginBottom: "1rem",
-};
-
-const mobileFilterButtonStyle = {
-  background: "#3498db",
-  color: "white",
-  border: "none",
-  padding: "0.5rem 1rem",
-  borderRadius: "6px",
-  cursor: "pointer",
-  fontWeight: "600",
-  marginBottom: "1rem",
-  display: "flex",
-  alignItems: "center",
-  gap: "0.5rem",
-};
-
-const mobileFiltersStyle = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "1rem",
-  marginBottom: "1rem",
-  padding: "1rem",
-  background: "#f8f9fa",
-  borderRadius: "8px",
-};
-
-const filterGroupStyle = {
-  flex: "1",
-  minWidth: "150px",
-};
-
-const labelStyle = {
-  display: "block",
-  fontWeight: "600",
-  marginBottom: "0.5rem",
-  color: "#2c3e50",
-  display: "flex",
-  alignItems: "center",
-  gap: "0.5rem",
-  fontSize: "0.9rem",
-};
-
-const selectWrapperStyle = {
-  position: "relative",
-};
-
-const selectStyle = {
-  width: "100%",
-  padding: "0.6rem 0.8rem",
-  borderRadius: "6px",
-  border: "1px solid #ddd",
-  backgroundColor: "#fff",
-  fontSize: "0.9rem",
-  appearance: "none",
-  cursor: "pointer",
-  boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
-};
-
-const tableContainerStyle = {
-  overflowX: "auto",
-  borderRadius: "8px",
-  border: "1px solid #eee",
-  marginBottom: "1rem",
-  WebkitOverflowScrolling: "touch",
-};
-
-const tableStyle = {
-  width: "100%",
-  borderCollapse: "collapse",
-  minWidth: "800px",
-  fontSize: "0.95rem",
-};
-
-const mobileTableStyle = {
-  width: "100%",
-  borderCollapse: "collapse",
-  minWidth: "500px",
-  fontSize: "0.85rem",
-};
-
-const thStyle = {
-  background: "#f8f9fa",
-  padding: "0.8rem",
-  textAlign: "left",
-  fontWeight: "600",
-  color: "#7f8c8d",
-  borderBottom: "2px solid #eee",
-  cursor: "pointer",
-  position: "sticky",
-  top: 0,
-};
-
-const thContentStyle = {
-  display: "flex",
-  alignItems: "center",
-  gap: "0.3rem",
-};
-
-const trStyle = {
-  borderBottom: "1px solid #eee",
-  cursor: "pointer",
-};
-
-const trAltStyle = {
-  background: "#f8f9fa",
-};
-
-const expandedTrStyle = {
-  background: "#e3f2fd",
-};
-
-const tdStyle = {
-  padding: "0.8rem",
-  textAlign: "center",
-};
-
-const linkStyle = {
-  color: "#3498db",
-  fontWeight: "500",
-  textDecoration: "none",
-};
-
-const phoneLinkStyle = {
-  color: "#3498db",
-  textDecoration: "none",
-  marginLeft: "0.5rem",
-};
-
-const bestBadgeStyle = {
-  position: "absolute",
-  top: "-10px",
-  right: "0",
-  background: "#27ae60",
-  color: "white",
-  fontSize: "0.7rem",
-  padding: "0.2rem 0.4rem",
-  borderRadius: "12px",
-  display: "flex",
-  alignItems: "center",
-  gap: "0.2rem",
-  whiteSpace: "nowrap",
-};
-
-const detailsRowStyle = {
-  background: "#f0f7ff",
-};
-
-const detailsCellStyle = {
-  padding: "0",
-};
-
-const detailsContentStyle = {
-  padding: "1rem",
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-  gap: "0.8rem",
-  fontSize: "0.9rem",
-};
-
-const orderButtonStyle = {
-  background: "#3498db",
-  color: "white",
-  border: "none",
-  padding: "0.6rem 1rem",
-  borderRadius: "6px",
-  cursor: "pointer",
-  fontWeight: "600",
-  transition: "background 0.3s",
-  gridColumn: "1 / -1",
-  maxWidth: "250px",
-  margin: "0.5rem auto 0",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "0.5rem",
-  fontSize: "0.9rem",
-};
-
-const summaryStyle = {
-  display: "flex",
-  flexWrap: "wrap",
-  gap: "1rem",
-  marginTop: "1rem",
-  paddingTop: "1rem",
-  borderTop: "1px solid #eee",
-};
-
-const mobileSummaryStyle = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "0.8rem",
-  marginTop: "1rem",
-  paddingTop: "1rem",
-  borderTop: "1px solid #eee",
-  fontSize: "0.9rem",
-};
-
-const summaryItemStyle = {
-  background: "#f8f9fa",
-  padding: "0.8rem",
-  borderRadius: "8px",
-  flex: "1",
-  minWidth: "150px",
-  display: "flex",
-  alignItems: "center",
-  fontSize: "0.9rem",
-};
-
-const modalOverlayStyle = {
-  position: "fixed",
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  backgroundColor: "rgba(0, 0, 0, 0.5)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  zIndex: 1000,
-  padding: "1rem",
-};
-
-const modalStyle = {
-  backgroundColor: "#fff",
-  borderRadius: "8px",
-  padding: "1.5rem",
-  width: "100%",
-  maxWidth: "500px",
-  maxHeight: "90vh",
-  overflowY: "auto",
-  boxShadow: "0 5px 15px rgba(0, 0, 0, 0.3)",
-};
-
-const modalTitleStyle = {
-  marginTop: 0,
-  marginBottom: "1.2rem",
-  color: "#2c3e50",
-  fontSize: "1.2rem",
-};
-
-const formGroupStyle = {
-  marginBottom: "1rem",
-};
-
-const formLabelStyle = {
-  display: "block",
-  marginBottom: "0.5rem",
-  fontWeight: "600",
-  color: "#2c3e50",
-  fontSize: "0.9rem",
-};
-
-const inputStyle = {
-  width: "100%",
-  padding: "0.6rem",
-  border: "1px solid #ddd",
-  borderRadius: "4px",
-  fontSize: "0.9rem",
-};
-
-const buttonGroupStyle = {
-  display: "flex",
-  justifyContent: "flex-end",
-  gap: "0.8rem",
-  marginTop: "1.2rem",
-};
-
-const cancelButtonStyle = {
-  background: "#e74c3c",
-  color: "white",
-  border: "none",
-  padding: "0.6rem 1rem",
-  borderRadius: "4px",
-  cursor: "pointer",
-  fontWeight: "600",
-  fontSize: "0.9rem",
-};
-
-const submitButtonStyle = {
-  background: "#27ae60",
-  color: "white",
-  border: "none",
-  padding: "0.6rem 1rem",
-  borderRadius: "4px",
-  cursor: "pointer",
-  fontWeight: "600",
-  fontSize: "0.9rem",
-};
+/* (остальные стили — скопируйте их из вашего текущего файла, они не изменились) */
+const headerStyle = { textAlign: "center", marginBottom: "1rem", maxWidth: "800px", margin: "0 auto 1rem" };
+const titleStyle = { fontSize: "clamp(1.5rem, 5vw, 2.2rem)", color: "#2c3e50", marginBottom: "0.5rem" };
+const subtitleStyle = { fontSize: "clamp(0.9rem, 3vw, 1.2rem)", color: "#7f8c8d" };
+const cardStyle = { background: "#fff", borderRadius: "12px", boxShadow: "0 5px 15px rgba(0,0,0,0.08)", padding: "1rem", maxWidth: "1200px", margin: "0 auto" };
+const controlsStyle = { display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "1rem" };
+const mobileFilterButtonStyle = { background: "#3498db", color: "white", border: "none", padding: "0.5rem 1rem", borderRadius: "6px", cursor: "pointer", fontWeight: "600", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" };
+const mobileFiltersStyle = { display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1rem", padding: "1rem", background: "#f8f9fa", borderRadius: "8px" };
+const filterGroupStyle = { flex: "1", minWidth: "150px" };
+const labelStyle = { display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem", fontWeight: 600, color: "#2c3e50", marginBottom: "0.5rem" };
+const selectWrapperStyle = { position: "relative" };
+const selectStyle = { width: "100%", padding: "0.6rem 0.8rem", borderRadius: "6px", border: "1px solid #ddd", backgroundColor: "#fff", fontSize: "0.9rem", appearance: "none", cursor: "pointer", boxShadow: "0 2px 5px rgba(0,0,0,0.05)" };
+const tableContainerStyle = { overflowX: "auto", borderRadius: "8px", border: "1px solid #eee", marginBottom: "1rem", WebkitOverflowScrolling: "touch" };
+const tableStyle = { width: "100%", borderCollapse: "collapse", minWidth: "800px", fontSize: "0.95rem" };
+const mobileTableStyle = { width: "100%", borderCollapse: "collapse", minWidth: "500px", fontSize: "0.85rem" };
+const thStyle = { background: "#f8f9fa", padding: "0.8rem", textAlign: "left", fontWeight: "600", color: "#7f8c8d", borderBottom: "2px solid #eee", cursor: "pointer", position: "sticky", top: 0 };
+const thContentStyle = { display: "flex", alignItems: "center", gap: "0.3rem" };
+const trStyle = { borderBottom: "1px solid #eee", cursor: "pointer" };
+const trAltStyle = { background: "#f8f9fa" };
+const expandedTrStyle = { background: "#e3f2fd" };
+const tdStyle = { padding: "0.8rem", textAlign: "center" };
+const linkStyle = { color: "#3498db", fontWeight: "500", textDecoration: "none" };
+const bestBadgeStyle = { position: "absolute", top: "-10px", right: "0", background: "#27ae60", color: "white", fontSize: "0.7rem", padding: "0.2rem 0.4rem", borderRadius: "12px", display: "flex", alignItems: "center", gap: "0.2rem", whiteSpace: "nowrap" };
+const detailsRowStyle = { background: "#f0f7ff" };
+const detailsCellStyle = { padding: "0" };
+const detailsContentStyle = { padding: "1rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "0.8rem", fontSize: "0.9rem" };
+const orderButtonStyle = { background: "#3498db", color: "white", border: "none", padding: "0.6rem 1rem", borderRadius: "6px", cursor: "pointer", fontWeight: "600", transition: "background 0.3s", gridColumn: "1 / -1", maxWidth: "250px", margin: "0.5rem auto 0", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", fontSize: "0.9rem" };
+const summaryStyle = { display: "flex", flexWrap: "wrap", gap: "1rem", marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid #eee" };
+const mobileSummaryStyle = { display: "flex", flexDirection: "column", gap: "0.8rem", marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid #eee", fontSize: "0.9rem" };
+const summaryItemStyle = { background: "#f8f9fa", padding: "0.8rem", borderRadius: "8px", flex: "1", minWidth: "150px", display: "flex", alignItems: "center", fontSize: "0.9rem" };
