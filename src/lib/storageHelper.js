@@ -1,9 +1,5 @@
 import { supabase } from './supabaseClient';
 
-/**
- * uploadFile(bucket, path, file) -> { publicUrl, path }
- * deleteFile(bucket, path) -> { error }
- */
 export async function uploadFile(bucket, path, file) {
   // path example: `${factoryId}/${filename}`
   const { data, error: uploadError } = await supabase.storage
@@ -14,7 +10,7 @@ export async function uploadFile(bucket, path, file) {
     return { error: uploadError };
   }
 
-  // Получим публичный url (если bucket публичный)
+  // Supabase возвращает поле publicURL (обратите внимание на регистр)
   const { publicURL, error: urlError } = supabase.storage
     .from(bucket)
     .getPublicUrl(data.path);
@@ -23,7 +19,8 @@ export async function uploadFile(bucket, path, file) {
     return { error: urlError };
   }
 
-  return { publicUrl, path: data.path };
+  // Возвращаем согласованное имя publicUrl (удобно использовать в коде)
+  return { publicUrl: publicURL, path: data.path };
 }
 
 export async function deleteFile(bucket, path) {
