@@ -25,58 +25,20 @@ export default function Prices({ t }) {
   const [showFilters, setShowFilters] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Загрузка фабрик + прайсов
-useEffect(() => {
-  let mounted = true;
-  (async () => {
-    setLoading(true);
-    try {
-      // Узнаём пользователя и роль
-      let user = null;
+  // Загрузка фабрик + прайсов и определение роли
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      setLoading(true);
       try {
-        const { data: userData } = await supabase.auth.getUser();
-        user = userData?.user ?? null;
-      } catch (e) {
-        user = null;
-      }
-
-      let admin = false;
-      if (user) {
+        // Узнаём пользователя и роль
+        let user = null;
         try {
-          const { data: profile, error: profErr } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single();
-          if (!profErr && profile?.role === 'admin') admin = true;
+          const { data: userData } = await supabase.auth.getUser();
+          user = userData?.user ?? null;
         } catch (e) {
-          admin = false;
+          user = null;
         }
-      }
-      if (!mounted) return;
-      setIsAdmin(admin);
-
-      // Запрос фабрик: если не админ — только published = true
-      let query = supabase
-        .from('factories')
-        .select('id, name, slug, city, published, factory_prices(id, title, price, currency)');
-
-      if (!admin) {
-        query = query.eq('published', true);
-      }
-
-      const { data, error } = await query.order('name', { ascending: true });
-      if (error) throw error;
-      if (mounted) setFactories(data || []);
-    } catch (err) {
-      console.error('Failed to load factories:', err);
-      if (mounted) setFactories([]);
-    } finally {
-      if (mounted) setLoading(false);
-    }
-  })();
-  return () => { mounted = false; };
-}, []);
 
         let admin = false;
         if (user) {
@@ -88,26 +50,27 @@ useEffect(() => {
               .single();
             if (!profErr && profile?.role === 'admin') admin = true;
           } catch (e) {
-            // ignore
             admin = false;
           }
         }
         if (!mounted) return;
         setIsAdmin(admin);
 
-        // Запрос фабрик: если не админ — только published = true
+        // Запрос фабрик: обязательно запрашиваем city
         let query = supabase
           .from('factories')
-          .select('id, name, slug, published, factory_prices(id, title, price, currency)');
+          .select('id, name, slug, city, published, factory_prices(id, title, price, currency)');
+
         if (!admin) {
           query = query.eq('published', true);
         }
+
         const { data, error } = await query.order('name', { ascending: true });
         if (error) throw error;
         if (mounted) setFactories(data || []);
       } catch (err) {
         console.error('Failed to load factories:', err);
-        setFactories([]);
+        if (mounted) setFactories([]);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -399,6 +362,45 @@ useEffect(() => {
     </div>
   );
 }
+
+/* --- стили (оставлены ваши текущие стили; вставьте их ниже или импортируйте из текущего файла) --- */
+/* ... все стили как в вашем оригинале (pageStyle, headerStyle, ...) ... */
+const pageStyle = {
+  background: "linear-gradient(to bottom, #f8f9fa, #e9ecef)",
+  minHeight: "100vh",
+  padding: "1rem",
+  fontFamily: "'Roboto', sans-serif",
+};
+/* (остальные стили — скопируйте их из вашего текущего файла, они не изменились) */
+const headerStyle = { textAlign: "center", marginBottom: "1rem", maxWidth: "800px", margin: "0 auto 1rem" };
+const titleStyle = { fontSize: "clamp(1.5rem, 5vw, 2.2rem)", color: "#2c3e50", marginBottom: "0.5rem" };
+const subtitleStyle = { fontSize: "clamp(0.9rem, 3vw, 1.2rem)", color: "#7f8c8d" };
+const cardStyle = { background: "#fff", borderRadius: "12px", boxShadow: "0 5px 15px rgba(0,0,0,0.08)", padding: "1rem", maxWidth: "1200px", margin: "0 auto" };
+const controlsStyle = { display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "1rem" };
+const mobileFilterButtonStyle = { background: "#3498db", color: "white", border: "none", padding: "0.5rem 1rem", borderRadius: "6px", cursor: "pointer", fontWeight: "600", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" };
+const mobileFiltersStyle = { display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1rem", padding: "1rem", background: "#f8f9fa", borderRadius: "8px" };
+const filterGroupStyle = { flex: "1", minWidth: "150px" };
+const labelStyle = { display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem", fontWeight: 600, color: "#2c3e50", marginBottom: "0.5rem" };
+const selectWrapperStyle = { position: "relative" };
+const selectStyle = { width: "100%", padding: "0.6rem 0.8rem", borderRadius: "6px", border: "1px solid #ddd", backgroundColor: "#fff", fontSize: "0.9rem", appearance: "none", cursor: "pointer", boxShadow: "0 2px 5px rgba(0,0,0,0.05)" };
+const tableContainerStyle = { overflowX: "auto", borderRadius: "8px", border: "1px solid #eee", marginBottom: "1rem", WebkitOverflowScrolling: "touch" };
+const tableStyle = { width: "100%", borderCollapse: "collapse", minWidth: "800px", fontSize: "0.95rem" };
+const mobileTableStyle = { width: "100%", borderCollapse: "collapse", minWidth: "500px", fontSize: "0.85rem" };
+const thStyle = { background: "#f8f9fa", padding: "0.8rem", textAlign: "left", fontWeight: "600", color: "#7f8c8d", borderBottom: "2px solid #eee", cursor: "pointer", position: "sticky", top: 0 };
+const thContentStyle = { display: "flex", alignItems: "center", gap: "0.3rem" };
+const trStyle = { borderBottom: "1px solid #eee", cursor: "pointer" };
+const trAltStyle = { background: "#f8f9fa" };
+const expandedTrStyle = { background: "#e3f2fd" };
+const tdStyle = { padding: "0.8rem", textAlign: "center" };
+const linkStyle = { color: "#3498db", fontWeight: "500", textDecoration: "none" };
+const bestBadgeStyle = { position: "absolute", top: "-10px", right: "0", background: "#27ae60", color: "white", fontSize: "0.7rem", padding: "0.2rem 0.4rem", borderRadius: "12px", display: "flex", alignItems: "center", gap: "0.2rem", whiteSpace: "nowrap" };
+const detailsRowStyle = { background: "#f0f7ff" };
+const detailsCellStyle = { padding: "0" };
+const detailsContentStyle = { padding: "1rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "0.8rem", fontSize: "0.9rem" };
+const orderButtonStyle = { background: "#3498db", color: "white", border: "none", padding: "0.6rem 1rem", borderRadius: "6px", cursor: "pointer", fontWeight: "600", transition: "background 0.3s", gridColumn: "1 / -1", maxWidth: "250px", margin: "0.5rem auto 0", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", fontSize: "0.9rem" };
+const summaryStyle = { display: "flex", flexWrap: "wrap", gap: "1rem", marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid #eee" };
+const mobileSummaryStyle = { display: "flex", flexDirection: "column", gap: "0.8rem", marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid #eee", fontSize: "0.9rem" };
+const summaryItemStyle = { background: "#f8f9fa", padding: "0.8rem", borderRadius: "8px", flex: "1", minWidth: "150px", display: "flex", alignItems: "center", fontSize: "0.9rem" };
 
 /* --- стили (оставлены ваши текущие стили; вставьте их ниже или импортируйте из текущего файла) --- */
 /* ... все стили как в вашем оригинале (pageStyle, headerStyle, ...) ... */
