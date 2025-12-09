@@ -40,8 +40,7 @@ function RequestModal({ factoryName, onClose, t = {} }) {
     wechat: "",
     city: "Костанай",
     cargo: "Кормовая мука",
-    station: "Хоргос",
-    planGU: "с планом ГУ",
+    station: "Хоргос", // default
     date: today,
   });
 
@@ -123,7 +122,6 @@ function RequestModal({ factoryName, onClose, t = {} }) {
       city: form.city || "",
       cargo: form.cargo || "",
       station: form.station || "",
-      planGU: form.planGU || "",
       date: form.date || "",
       factory: resolvedFactory,
       to_email: process.env.REACT_APP_RECIPIENT_EMAIL || "abzalkojaixan3@gmail.com",
@@ -173,7 +171,6 @@ function RequestModal({ factoryName, onClose, t = {} }) {
       `Город: ${form.city}`,
       `Груз: ${form.cargo}`,
       `Станция: ${form.station}`,
-      `План ГУ: ${form.planGU}`,
       `Дата: ${form.date}`,
     ].filter(Boolean);
     return encodeURIComponent(lines.join("\n"));
@@ -241,163 +238,4 @@ function RequestModal({ factoryName, onClose, t = {} }) {
 
                   <div className="rm-field">
                     <input
-                      name="phone"
-                      value={formatPhoneForDisplay(form.phone)}
-                      onChange={handle}
-                      placeholder={modal.phone || "Телефон"}
-                      className={`rm-input ${errors.phone ? "invalid" : ""}`}
-                      aria-invalid={!!errors.phone}
-                      aria-describedby={errors.phone ? "err-phone" : undefined}
-                    />
-                    {errors.phone && <div id="err-phone" className="rm-error">{errors.phone}</div>}
-                  </div>
-
-                  <div className="rm-field">
-                    <input
-                      name="wechat"
-                      value={form.wechat}
-                      onChange={handle}
-                      placeholder={modal.wechat || "WeChat"}
-                      className="rm-input"
-                    />
-                  </div>
-
-                  <div className="rm-field">
-                    <select name="city" value={form.city} onChange={handle} className="rm-input">
-                      <option>Костанай</option>
-                      <option>Рудный</option>
-                    </select>
-                  </div>
-
-                  <div className="rm-field">
-                    <select name="cargo" value={form.cargo} onChange={handle} className="rm-input">
-                      <option>Кормовая мука</option>
-                      <option>Ячмень</option>
-                    </select>
-                  </div>
-
-                  <div className="rm-field">
-                    <select name="station" value={form.station} onChange={handle} className="rm-input">
-                      <option>Хоргос</option>
-                      <option>Алтынколь</option>
-                    </select>
-                  </div>
-
-                  <div className="rm-field">
-                    <select name="planGU" value={form.planGU} onChange={handle} className="rm-input">
-                      <option>с планом ГУ</option>
-                      <option>без плана</option>
-                    </select>
-                  </div>
-                </form>
-              )}
-
-              {step === 1 && (
-                <div className="rm-form">
-                  <label className="rm-label">{modal.date || "Дата"}</label>
-                  <input
-                    type="date"
-                    name="date"
-                    min={today}
-                    value={form.date}
-                    onChange={handle}
-                    className={`rm-input ${errors.date ? "invalid" : ""}`}
-                    aria-invalid={!!errors.date}
-                    aria-describedby={errors.date ? "err-date" : undefined}
-                  />
-                  {errors.date && <div id="err-date" className="rm-error">{errors.date}</div>}
-                </div>
-              )}
-
-              {step === 2 && (
-                <div className="rm-review" aria-live="polite">
-                  {Object.entries({
-                    [modal.name || "Имя"]: form.name,
-                    [modal.phone || "Телефон"]: formatPhoneForDisplay(form.phone),
-                    [modal.wechat || "WeChat"]: form.wechat,
-                    [modal.city || "Город"]: form.city,
-                    [modal.cargo || "Груз"]: form.cargo,
-                    [modal.station || "Станция"]: form.station,
-                    [modal.planGU || "План ГУ"]: form.planGU,
-                    [modal.date || "Дата"]: form.date,
-                  }).map(([k, v]) => (
-                    <p key={k}><strong>{k}:</strong> {v}</p>
-                  ))}
-                  {errors.submit && <div className="rm-error" role="alert">{errors.submit}</div>}
-
-                  <div style={{ marginTop: 10, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                    <label style={{ fontSize: "0.9rem", color: "#444", marginRight: 6 }}>Цель сообщения:</label>
-                    <select
-                      value={waReason}
-                      onChange={(e) => setWaReason(e.target.value)}
-                      className="rm-input"
-                      style={{ width: "auto", minWidth: 200 }}
-                      aria-label="Цель сообщения в WhatsApp"
-                    >
-                      {waReasons.map(r => <option key={r} value={r}>{r}</option>)}
-                    </select>
-                  </div>
-
-                  <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                    <button
-                      onClick={submit}
-                      disabled={sending}
-                      className="rm-btn rm-btn-blue"
-                      type="button"
-                    >
-                      {sending ? "Отправка..." : (modal.submit || "Отправить")}
-                    </button>
-
-                    <button
-                      onClick={openWhatsApp}
-                      disabled={sending}
-                      className="rm-btn rm-btn-whatsapp"
-                      type="button"
-                    >
-                      {WA_ICON} <span>Написать в WhatsApp</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <div className="rm-btn-row" style={{ marginTop: 12 }}>
-                <button
-                  onClick={() => { if (!sending) onClose && onClose(); }}
-                  className="rm-btn rm-btn-grey"
-                  type="button"
-                  disabled={sending}
-                >
-                  {modal.cancel || "Отмена"}
-                </button>
-
-                {step > 0 && (
-                  <button
-                    onClick={back}
-                    className="rm-btn rm-btn-grey"
-                    type="button"
-                    disabled={sending}
-                  >
-                    {modal.back || "Назад"}
-                  </button>
-                )}
-
-                {step < 2 && (
-                  <button
-                    onClick={next}
-                    disabled={!canNext()}
-                    className="rm-btn rm-btn-blue"
-                    type="button"
-                  >
-                    {modal.next || "Далее"}
-                  </button>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default RequestModal;
+                   
