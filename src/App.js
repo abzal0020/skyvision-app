@@ -99,11 +99,11 @@ function Home({ t, openModal }) {
       <section className="factories-section">
         <h2 className="section-title">{t.factories.title}</h2>
         <div className="factories-grid">
-          {popularFactories.map((factory, idx) => (
+          {popularFactories.map((factory) => (
             <Link
               to={`/factory/${slugifyFactoryName(factory.name)}`}
               className="factory-card"
-              key={idx}
+              key={factory.name}
             >
               {factory.name}
             </Link>
@@ -135,11 +135,8 @@ function App() {
             <Link to="/prices">{t.nav.prices}</Link>
             <Link to="/contact">{t.nav.contact}</Link>
           </nav>
-          <a className="header-contacts" href="tel:+77471654092" aria-label={`Позвонить ${t.hero.phone}`}>
-            <FaPhone />
-            <span>{t.hero.phone}</span>
-          </a>
 
+          {/* single phone contact */}
           <a className="header-contacts" href={`tel:${DEFAULT_TEL_HREF}`} aria-label={`Позвонить ${t.hero.phone}`}>
             <FaPhone />
             <span>{t.hero.phone}</span>
@@ -186,12 +183,11 @@ function App() {
             {/* <-- Добавленный маршрут для админки */}
             <Route path="/admin/factories" element={<FactoriesPage />} />
             <Route path="/admin/factories/:id" element={<FactoryDetail />} />
-            {/* при желании можно добавить /admin/factories/:id */}
           </Routes>
         </main>
-        <Footer t={t} />
 
-        <Footer />
+        {/* single footer */}
+        <Footer t={t} />
 
         <FloatingWhatsApp message={"Здравствуйте! Интересует заявка по продукту/логистике."} />
 
