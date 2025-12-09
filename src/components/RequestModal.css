@@ -8,6 +8,7 @@
   justify-content: center;
   align-items: center;
   z-index: 3030;
+  padding: 20px; /* чтобы модал не прилипал к краю и был внутренний отступ */
   animation: fadeIn .18s;
 }
 @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
@@ -16,24 +17,37 @@
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 10px 36px rgba(0,0,0,.18);
-  padding: 20px 18px;
-  width: 96vw;
+  width: 100%;
   max-width: 520px;
   box-sizing: border-box;
   position: relative;
   animation: popIn .16s;
+  overflow: hidden; /* обрезаем тени и фокус, чтобы не выходило за скругление */
 }
 @keyframes popIn { from { transform: scale(.98); opacity: .6 } to { transform: scale(1); opacity: 1 } }
 
+/* Внутренний контейнер делает содержимое скроллимым, а сам .rm-modal остаётся с clip */
+.rm-inner {
+  padding: 18px;
+  max-height: calc(100vh - 80px); /* оставляем запас сверху/снизу */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Скрываем возможный вертикальный скролл-бар в WebKit, аккуратно */
+.rm-inner::-webkit-scrollbar { width: 8px; }
+.rm-inner::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius: 6px; }
+
+/* Кнопка закрытия */
 .rm-close {
   position: absolute;
-  top: 10px; right: 10px;
+  top: 8px; right: 10px;
   background: none;
   border: none;
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   color: #777;
   cursor: pointer;
-  padding: 4px 7px;
+  padding: 6px;
   z-index: 11;
 }
 .rm-close:hover { color: #222; }
@@ -65,6 +79,8 @@
   font-size:0.98rem;
   outline:none;
   transition:box-shadow .12s, border-color .12s;
+  background: #fff;
+  box-sizing: border-box;
 }
 .rm-input:focus { box-shadow: 0 6px 16px rgba(47,45,187,0.06); border-color:#6b7be0; }
 
@@ -115,6 +131,7 @@
 
 /* Responsive tweaks */
 @media (max-width:520px) {
-  .rm-modal { padding:16px 12px; max-width:96vw; }
+  .rm-modal { max-width: 96vw; }
+  .rm-inner { padding: 14px; max-height: calc(100vh - 60px); }
   .rm-step-label { font-size:.62rem; min-width:40px; }
 }
