@@ -23,22 +23,54 @@ export default function Prices({ t }) {
   const [selectedFactory, setSelectedFactory] = useState("");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showFilters, setShowFilters] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  // Загрузка фабрик + прайсов (показываем только published = true)
+  // Загрузка фабрик + прайсов
   useEffect(() => {
     let mounted = true;
     (async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase
+        // Узнаём пользователя и роль
+        let user = null;
+        try {
+          const { data: userData } = await supabase.auth.getUser();
+          user = userData?.user ?? null;
+        } catch (e) {
+          // ignore - unauthenticated
+          user = null;
+        }
+
+        let admin = false;
+        if (user) {
+          try {
+            const { data: profile, error: profErr } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', user.id)
+              .single();
+            if (!profErr && profile?.role === 'admin') admin = true;
+          } catch (e) {
+            // ignore
+            admin = false;
+          }
+        }
+        if (!mounted) return;
+        setIsAdmin(admin);
+
+        // Запрос фабрик: если не админ — только published = true
+        let query = supabase
           .from('factories')
-          .select('id, name, slug, city, published, factory_prices(id, title, price, currency)')
-          .eq('published', true)
-          .order('name', { ascending: true });
+          .select('id, name, slug, published, factory_prices(id, title, price, currency)');
+        if (!admin) {
+          query = query.eq('published', true);
+        }
+        const { data, error } = await query.order('name', { ascending: true });
         if (error) throw error;
         if (mounted) setFactories(data || []);
       } catch (err) {
         console.error('Failed to load factories:', err);
+        setFactories([]);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -46,25 +78,24 @@ export default function Prices({ t }) {
     return () => { mounted = false; };
   }, []);
 
-  // Города на странице (вытаскиваем из загруженных данных)
+  // Города на странице (вытаскиваем из загруженных данных, поле city может не существовать)
   const cityOptions = useMemo(() => {
-    const cities = [...new Set(factories.map(f => f.city || '—'))].filter(Boolean);
+    const cities = [...new Set((factories || []).map(f => (f.city ?? '—')))].filter(Boolean);
     return ["Все", ...cities];
   }, [factories]);
 
-  // Подготовка rawData подобного массива из фактических данных
+  // Подготовка массива для отображения
   const rawData = useMemo(() => {
-    return factories.map(f => {
+    return (factories || []).map(f => {
       // выбираем "показательный" прайс: первый или null
       const priceRec = (f.factory_prices && f.factory_prices.length > 0) ? f.factory_prices[0] : null;
       return {
         id: f.id,
-        city: f.city || '—',          // замените, если поле называется иначе
+        city: f.city || '—',
         factory: f.name,
         slug: f.slug,
         price: priceRec ? (priceRec.price ?? 0) : 0,
         currency: priceRec ? (priceRec.currency || '') : '',
-        // эти поля у вас, возможно, хранятся отдельно; пока дефолт:
         minOrder: f.min_order || 20,
         payment: f.payment_terms || '50% предоплата'
       };
@@ -107,7 +138,7 @@ export default function Prices({ t }) {
     setShowOrderModal(true);
   };
 
-  // Edit button: переходим в админку по id
+  // Edit button: переходим в админку по id (видна только админам)
   const handleEdit = (factoryId, e) => {
     e.stopPropagation();
     navigate(`/admin/factories/${factoryId}`);
@@ -283,12 +314,14 @@ export default function Prices({ t }) {
                                 <FaShoppingCart /> {t.prices.orderBtn}
                               </button>
 
-                              <button
-                                style={{ ...orderButtonStyle, background: "#34495e" }}
-                                onClick={(e) => handleEdit(r.id, e)}
-                              >
-                                {t.prices.editBtn || "Edit"}
-                              </button>
+                              {isAdmin && (
+                                <button
+                                  style={{ ...orderButtonStyle, background: "#34495e" }}
+                                  onClick={(e) => handleEdit(r.id, e)}
+                                >
+                                  {t.prices.editBtn || "Edit"}
+                                </button>
+                              )}
                             </div>
                           </div>
                         </td>
@@ -329,6 +362,10 @@ export default function Prices({ t }) {
     </div>
   );
 }
+
+/* --- стили (оставлены ваши текущие стили; вставьте их ниже или импортируйте из текущего файла) --- */
+/* ... все стили как в вашем оригинале (pageStyle, headerStyle, ...) ... */
+/* (копируйте стили из вашего текущего файла, они не изменились) */
 
 /* --- стили (оставлены ваши текущие стили; вставьте их ниже или импортируйте из текущего файла) --- */
 /* ... все стили как в вашем оригинале (pageStyle, headerStyle, ...) ... */
