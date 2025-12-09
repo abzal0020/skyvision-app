@@ -1,0 +1,28 @@
+.floating-wa {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 5000;
+  background: linear-gradient(180deg,#25D366,#1FA54A);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 999px;
+  box-shadow: 0 8px 20px rgba(37,211,102,0.18);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.floating-wa svg { display: inline-block; vertical-align: middle; }
+.floating-wa:hover { transform: translateY(-3px); box-shadow: 0 12px 26px rgba(37,211,102,0.2); }
+.floating-wa:active { transform: translateY(0); }
+.floating-wa-text { display: inline-block; line-height: 1; }
+
+/* на маленьких экранах показываем только иконку */
+@media (max-width:520px) {
+  .floating-wa { padding: 10px; border-radius: 50%; width: 52px; height: 52px; justify-content:center; }
+  .floating-wa-text { display: none; }
+}

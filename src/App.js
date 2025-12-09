@@ -20,8 +20,24 @@ import FactoryShahristan from "./factories/FactoryShahristan";
 import FactoryAgrofood from "./factories/FactoryAgrofood";
 import RequestModal from "./components/RequestModal";
 import Footer from "./components/Footer";
+import FloatingWhatsApp from "./components/FloatingWhatsApp";
 import "./App.css";
 import { locales } from "./locales";
+
+// добавляем импорт админской страницы
+import FactoryDetail from "./pages/admin/FactoryDetail";
+import FactoriesPage from "./pages/admin/FactoriesPage";
+
+const DEFAULT_TEL_HREF = "+77471654092";
+
+function slugifyFactoryName(name = "") {
+  return name
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^\w\-]/g, "");
+}
 
 function Home({ t, openModal }) {
   const services = [
@@ -46,9 +62,6 @@ function Home({ t, openModal }) {
           <button className="btn-main" onClick={() => openModal(t.hero.request)}>
             {t.hero.request}
           </button>
-          <div className="hero-phone">
-            <FaPhone /> {t.hero.phone}
-          </div>
         </div>
       </section>
 
@@ -87,7 +100,11 @@ function Home({ t, openModal }) {
         <h2 className="section-title">{t.factories.title}</h2>
         <div className="factories-grid">
           {popularFactories.map((factory, idx) => (
-            <Link to={`/factory/${factory.name.toLowerCase()}`} className="factory-card" key={idx}>
+            <Link
+              to={`/factory/${slugifyFactoryName(factory.name)}`}
+              className="factory-card"
+              key={idx}
+            >
               {factory.name}
             </Link>
           ))}
@@ -122,6 +139,12 @@ function App() {
             <FaPhone />
             <span>{t.hero.phone}</span>
           </a>
+
+          <a className="header-contacts" href={`tel:${DEFAULT_TEL_HREF}`} aria-label={`Позвонить ${t.hero.phone}`}>
+            <FaPhone />
+            <span>{t.hero.phone}</span>
+          </a>
+
           <button className="search-btn">
             <FaSearch />
           </button>
@@ -136,11 +159,14 @@ function App() {
             >中文</button>
           </div>
         </header>
+
         <main className="main">
           <Routes>
             <Route path="/" element={<Home t={t} openModal={openModal} />} />
             <Route path="/prices" element={<Prices t={t} />} />
             <Route path="/contact" element={<Contact />} />
+
+            {/* клиентские factory страницы */}
             <Route path="/factory/agrodan" element={<Agrodan />} />
             <Route path="/factory/ibmo" element={<IBMO />} />
             <Route path="/factory/mibeko" element={<FactoryMibeko />} />
@@ -156,13 +182,23 @@ function App() {
             <Route path="/factory/agromix" element={<FactoryAgromix />} />
             <Route path="/factory/shahristan" element={<FactoryShahristan />} />
             <Route path="/factory/agrofood" element={<FactoryAgrofood />} />
+
+            {/* <-- Добавленный маршрут для админки */}
+            <Route path="/admin/factories" element={<FactoriesPage />} />
+            <Route path="/admin/factories/:id" element={<FactoryDetail />} />
+            {/* при желании можно добавить /admin/factories/:id */}
           </Routes>
         </main>
         <Footer t={t} />
+
+        <Footer />
+
+        <FloatingWhatsApp message={"Здравствуйте! Интересует заявка по продукту/логистике."} />
+
         {showModal && (
-          <RequestModal 
-            factoryName={activeService} 
-            onClose={() => setShowModal(false)} 
+          <RequestModal
+            factoryName={activeService}
+            onClose={() => setShowModal(false)}
             t={t}
           />
         )}
