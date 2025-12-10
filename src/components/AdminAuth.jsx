@@ -5,11 +5,13 @@ import { useAuth } from '../context/AuthContext';
 export default function AdminAuth({ onAuthChange }) {
   const { user, profile, loading } = useAuth();
 
+  // локальное состояние только для формы входа
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [signing, setSigning] = useState(false);
   const [message, setMessage] = useState('');
 
+  // уведомляем родителя при изменении user
   useEffect(() => {
     if (typeof onAuthChange === 'function') onAuthChange(user);
   }, [user, onAuthChange]);
@@ -27,6 +29,7 @@ export default function AdminAuth({ onAuthChange }) {
       setMessage('Signed in');
       setEmail('');
       setPassword('');
+      // AuthContext подпишется и обновит user/profile
     } catch (err) {
       setMessage(err?.message || 'Sign in failed');
     } finally {
@@ -37,6 +40,7 @@ export default function AdminAuth({ onAuthChange }) {
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
+      // AuthContext обработает изменение и очистит профиль
     } catch (err) {
       console.error('Sign out error', err);
     }
@@ -63,21 +67,8 @@ export default function AdminAuth({ onAuthChange }) {
 
   return (
     <form onSubmit={handleSignIn} style={{ marginBottom: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
-      <input
-        placeholder="admin email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-        style={{ padding: '6px 8px' }}
-      />
-      <input
-        placeholder="password"
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-        style={{ padding: '6px 8px' }}
-      />
+      <input placeholder="admin email" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ padding: '6px 8px' }} />
+      <input placeholder="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ padding: '6px 8px' }} />
       <button type="submit" disabled={signing} style={{ padding: '6px 10px', cursor: 'pointer' }}>
         {signing ? 'Signing...' : 'Sign in'}
       </button>
