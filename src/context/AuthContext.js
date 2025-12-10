@@ -10,56 +10,62 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let mounted = true;
-
-    async function init() {
-      setLoading(true);
+    // Начинаем с попытки получить session (быстрее и синхроннее для client-side)
+    (async () => {
       try {
-        const { data: userData } = await supabase.auth.getUser();
-        const u = userData?.user ?? null;
+        // Получаем сессию — если она есть, вытаскиваем user сразу
+        const { data: sessionData } = await supabase.auth.getSession();
+        const u = sessionData?.session?.user ?? null;
         if (!mounted) return;
         setUser(u);
+        // Помечаем loading false как можно раньше, чтобы UI не блокировался
+        setLoading(false);
 
+        // Если есть user — асинхронно загрузим профиль (не блокируя UI)
         if (u) {
-          const { data: p, error } = await supabase
-            .from('profiles')
-            .select('role,display_name')
-            .eq('id', u.id)
-            .single();
-          if (!error && mounted) setProfile(p);
-        } else {
-          setProfile(null);
-        }
-      } catch (e) {
-        console.error('Auth init error', e);
-        setUser(null);
-        setProfile(null);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-
-    init();
-
-    const { data: sub } = supabase.auth.onAuthStateChange(async () => {
-      try {
-        const { data: ud } = await supabase.auth.getUser();
-        const uu = ud?.user ?? null;
-        if (!mounted) return;
-        setUser(uu);
-        if (uu) {
-          const { data: p, error } = await supabase.from('profiles').select('role,display_name').eq('id', uu.id).single();
-          if (!error) setProfile(p);
-        } else {
-          setProfile(null);
+          try {
+            const { data: p, error } = await supabase
+              .from('profiles')
+              .select('role,display_name')
+              .eq('id', u.id)
+              .maybeSingle();
+            if (!mounted) return;
+            if (!error) setProfile(p);
+          } catch (err) {
+            // логируем, но не блокируем UI
+            console.warn('Failed to load profile (async):', err);
+          }
         }
       } catch (err) {
-        console.warn('auth change handling error', err);
+        console.warn('Auth init error (getSession):', err);
+        if (mounted) {
+          setUser(null);
+          setProfile(null);
+          setLoading(false);
+        }
+      }
+    })();
+
+    // Подписка на изменения аутентификации
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const u = session?.user ?? null;
+      if (!mounted) return;
+      setUser(u);
+      // при auth change нужно обновить профиль (асинхронно)
+      setProfile(null);
+      if (u) {
+        try {
+          const { data: p, error } = await supabase.from('profiles').select('role,display_name').eq('id', u.id).maybeSingle();
+          if (!error) setProfile(p);
+        } catch (err) {
+          console.warn('Profile load after auth change failed:', err);
+        }
       }
     });
 
     return () => {
       mounted = false;
-      try { sub?.subscription?.unsubscribe?.(); } catch(e) {}
+      try { listener?.subscription?.unsubscribe?.(); } catch (e) {}
     };
   }, []);
 
