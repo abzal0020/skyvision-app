@@ -2,15 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 
-/*
-  AdminAuth (новая версия)
-  - Использует useAuth() для получения user/profile/loading (AuthContext должен быть подключён в index.js)
-  - Не вызывает supabase.auth.getUser() напрямую при монтировании
-  - При изменении user вызывает onAuthChange(user) (как раньше)
-  - Показывает форму входа, если пользователь не авторизован
-  - При клике Sign out вызывает supabase.auth.signOut()
-*/
-
 export default function AdminAuth({ onAuthChange }) {
   const { user, profile, loading } = useAuth();
 
@@ -20,7 +11,6 @@ export default function AdminAuth({ onAuthChange }) {
   const [signing, setSigning] = useState(false);
   const [message, setMessage] = useState('');
 
-  // уведомляем родителя при изменении user (сохраняем совместимость)
   useEffect(() => {
     if (typeof onAuthChange === 'function') onAuthChange(user);
   }, [user, onAuthChange]);
@@ -35,7 +25,6 @@ export default function AdminAuth({ onAuthChange }) {
         password,
       });
       if (error) throw error;
-      // AuthContext обработает изменение через onAuthStateChange; здесь можно только показать сообщение
       setMessage('Signed in');
       setEmail('');
       setPassword('');
@@ -49,7 +38,6 @@ export default function AdminAuth({ onAuthChange }) {
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
-      // AuthContext обновит user/profile
     } catch (err) {
       console.error('Sign out error', err);
     }
@@ -59,12 +47,13 @@ export default function AdminAuth({ onAuthChange }) {
     return <div style={{ padding: 8 }}>Загрузка профиля...</div>;
   }
 
-  // Если пользователь есть — показываем краткую инфу и кнопку Sign out
   if (user) {
+    // безопасный вывод имени: сначала profile.display_name (если появится позже), иначе user.email, иначе id
+    const nameLabel = (profile && profile.display_name) || user.email || user.id;
     return (
       <div style={{ marginBottom: 12, display: 'flex', gap: 12, alignItems: 'center' }}>
         <div style={{ fontSize: 14 }}>
-          Вход: <strong>{user.email || profile?.display_name || user.id}</strong>
+          Вход: <strong>{nameLabel}</strong>
           {profile?.role && <span style={{ marginLeft: 8, color: '#666' }}>({profile.role})</span>}
         </div>
         <button onClick={handleSignOut} style={{ padding: '6px 10px', cursor: 'pointer' }}>
@@ -74,7 +63,6 @@ export default function AdminAuth({ onAuthChange }) {
     );
   }
 
-  // Если нет пользователя — показываем форму входа
   return (
     <form onSubmit={handleSignIn} style={{ marginBottom: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
       <input
