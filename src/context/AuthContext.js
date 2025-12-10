@@ -12,20 +12,18 @@ export function AuthProvider({ children }) {
     let mounted = true;
     (async () => {
       try {
-        // Быстро получаем session (локальная проверка, быстрее, чем remote getUser)
+        // Быстро получаем session
         const { data: sessionData } = await supabase.auth.getSession();
         const u = sessionData?.session?.user ?? null;
         if (!mounted) return;
         setUser(u);
-        // Не держим UI в loading — профиль загрузим в фоне
-        setLoading(false);
+        setLoading(false); // не блокируем UI
 
         if (u) {
-          // Запрашиваем ТОЛЬКО role (display_name убран, потому что его нет)
           try {
             const { data: p, error } = await supabase
               .from('profiles')
-              .select('role')
+              .select('role') // запрашиваем только существующее поле
               .eq('id', u.id)
               .maybeSingle();
             if (!mounted) return;
