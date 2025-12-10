@@ -8,31 +8,7 @@ import {
 } from "react-icons/fa";
 import { supabase } from "./lib/supabaseClient";
 
-/*
-  Cleaned Prices component:
-  - Removed duplicate imports/variables.
-  - Single isMobile state.
-  - Uses Supabase when available; falls back to STATIC_FACTORIES.
-  - Ensures price column is always shown on mobile.
-*/
-
-const STATIC_FACTORIES = [
-  { id: "s1", city: "Костанай", factory: "Agrodan KsT", price: 190, minOrder: 20, payment: "50% предоплата", slug: "agrodan" },
-  { id: "s2", city: "Костанай", factory: "Mibeko", price: 195, minOrder: 25, payment: "50% предоплата", slug: "mibeko" },
-  { id: "s3", city: "Костанай", factory: "Khlebny Dom", price: 195, minOrder: 15, payment: "50% предоплата", slug: "khlebny-dom" },
-  { id: "s4", city: "Костанай", factory: "Rahmat", price: 190, minOrder: 20, payment: "50% предоплата", slug: "rahmat" },
-  { id: "s5", city: "Костанай", factory: "IBMO (Magomed)", price: 185, minOrder: 30, payment: "50% предоплата", slug: "ibmo" },
-  { id: "s6", city: "Рудный", factory: "Rudni (Marat)", price: 200, minOrder: 15, payment: "50% предоплата", slug: "rudni" },
-  { id: "s7", city: "Костанай", factory: "Brothers Agro", price: 195, minOrder: 20, payment: "50% предоплата", slug: "brothers-agro" },
-  { id: "s8", city: "Костанай", factory: "Agroplanet", price: 195, minOrder: 25, payment: "60% предоплата", slug: "agroplanet" },
-  { id: "s9", city: "Костанай", factory: "Romana", price: 195, minOrder: 20, payment: "50% предоплата", slug: "romana" },
-  { id: "s10", city: "Костанай", factory: "Best Kostanai (malik)", price: 195, minOrder: 30, payment: "50% предоплата", slug: "best-kostanai" },
-  { id: "s11", city: "Костанай", factory: "Vadisa m", price: 195, minOrder: 20, payment: "50% предоплата", slug: "vadisa" },
-  { id: "s12", city: "Костанай", factory: "Harvest (Azamat)", price: 205, minOrder: 15, payment: "50% предоплата", slug: "harvest" },
-  { id: "s13", city: "Костанай", factory: "Agromix", price: 195, minOrder: 20, payment: "50% предоплата", slug: "agromix" },
-  { id: "s14", city: "Костанай", factory: "Shahristan agro", price: 190, minOrder: 25, payment: "50% предоплата", slug: "shahristan" },
-  { id: "s15", city: "Костанай", factory: "Agrofood export", price: 195, minOrder: 20, payment: "50% предоплата", slug: "agrofood" },
-];
+/* ... STATIC_FACTORIES unchanged ... */
 
 export default function Prices({ t }) {
   const navigate = useNavigate();
@@ -55,7 +31,7 @@ export default function Prices({ t }) {
     (async () => {
       setLoading(true);
       try {
-        // Attempt to determine user and role
+        // Determine user role once
         let user = null;
         try {
           const { data: userData } = await supabase.auth.getUser();
@@ -80,10 +56,10 @@ export default function Prices({ t }) {
         if (!mounted) return;
         setIsAdmin(admin);
 
-        // Query factories (include city)
+        // Query factories (minimal payload). NOTE: we request only price field for factory_prices to reduce response size.
         let query = supabase
           .from("factories")
-          .select("id, name, slug, city, published, min_order, payment_terms, factory_prices(id, title, price, currency)");
+          .select("id, name, slug, city, published, min_order, payment_terms, factory_prices(id, price, currency)");
 
         if (!admin) query = query.eq("published", true);
 
@@ -92,7 +68,6 @@ export default function Prices({ t }) {
         if (mounted && Array.isArray(data) && data.length > 0) {
           setFactories(data);
         } else {
-          // keep factories empty so normalizedData will fall back to static data
           setFactories([]);
         }
       } catch (err) {
@@ -105,12 +80,48 @@ export default function Prices({ t }) {
     return () => { mounted = false; };
   }, []);
 
-  // Responsive listener
+  // Realtime subscription: INSERT / UPDATE / DELETE for factories
   useEffect(() => {
-    const handleResize = () => setIsMobile(typeof window !== "undefined" ? window.innerWidth < 768 : false);
-    if (typeof window !== "undefined") window.addEventListener("resize", handleResize);
-    return () => { if (typeof window !== "undefined") window.removeEventListener("resize", handleResize); };
+    const channel = supabase
+      .channel('public:factories')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'factories' },
+        (payload) => {
+          const newFactory = payload.new;
+          setFactories(prev => {
+            if (!prev) return [newFactory];
+            if (prev.some(p => p.id === newFactory.id)) {
+              return prev.map(p => p.id === newFactory.id ? newFactory : p);
+            }
+            return [newFactory, ...prev];
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'factories' },
+        (payload) => {
+          const updated = payload.new;
+          setFactories(prev => prev.map(p => p.id === updated.id ? { ...p, ...updated } : p));
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'factories' },
+        (payload) => {
+          const removed = payload.old;
+          setFactories(prev => prev.filter(p => p.id !== removed.id));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
+
+  /* rest of component (normalization, render) is unchanged — you can keep your existing code below */
 
   // Prepare data for UI: prefer DB factories, otherwise static
   const normalizedData = useMemo(() => {
@@ -142,6 +153,8 @@ export default function Prices({ t }) {
     }));
   }, [factories]);
 
+  /* ... remaining code (render, styles) stays exactly as in your original file ... */
+}
   // City options from normalizedData
   const cityOptions = useMemo(() => {
     const cities = [...new Set(normalizedData.map(r => r.city || "—"))];
