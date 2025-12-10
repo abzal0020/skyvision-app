@@ -8,7 +8,24 @@ import {
 } from "react-icons/fa";
 import { supabase } from "./lib/supabaseClient";
 
-/* ... STATIC_FACTORIES unchanged ... */
+/* STATIC_FACTORIES unchanged (kept small for brevity) */
+const STATIC_FACTORIES = [
+  { id: "s1", city: "Костанай", factory: "Agrodan KsT", price: 190, minOrder: 20, payment: "50% предоплата", slug: "agrodan" },
+  { id: "s2", city: "Костанай", factory: "Mibeko", price: 195, minOrder: 25, payment: "50% предоплата", slug: "mibeko" },
+  { id: "s3", city: "Костанай", factory: "Khlebny Dom", price: 195, minOrder: 15, payment: "50% предоплата", slug: "khlebny-dom" },
+  { id: "s4", city: "Костанай", factory: "Rahmat", price: 190, minOrder: 20, payment: "50% предоплата", slug: "rahmat" },
+  { id: "s5", city: "Костанай", factory: "IBMO (Magomed)", price: 185, minOrder: 30, payment: "50% предоплата", slug: "ibmo" },
+  { id: "s6", city: "Рудный", factory: "Rudni (Marat)", price: 200, minOrder: 15, payment: "50% предоплата", slug: "rudni" },
+  { id: "s7", city: "Костанай", factory: "Brothers Agro", price: 195, minOrder: 20, payment: "50% предоплата", slug: "brothers-agro" },
+  { id: "s8", city: "Костанай", factory: "Agroplanet", price: 195, minOrder: 25, payment: "60% предоплата", slug: "agroplanet" },
+  { id: "s9", city: "Костанай", factory: "Romana", price: 195, minOrder: 20, payment: "50% предоплата", slug: "romana" },
+  { id: "s10", city: "Костанай", factory: "Best Kostanai (malik)", price: 195, minOrder: 30, payment: "50% предоплата", slug: "best-kostanai" },
+  { id: "s11", city: "Костанай", factory: "Vadisa m", price: 195, minOrder: 20, payment: "50% предоплата", slug: "vadisa" },
+  { id: "s12", city: "Костанай", factory: "Harvest (Azamat)", price: 205, minOrder: 15, payment: "50% предоплата", slug: "harvest" },
+  { id: "s13", city: "Костанай", factory: "Agromix", price: 195, minOrder: 20, payment: "50% предоплата", slug: "agromix" },
+  { id: "s14", city: "Костанай", factory: "Shahristan agro", price: 190, minOrder: 25, payment: "50% предоплата", slug: "shahristan" },
+  { id: "s15", city: "Костанай", factory: "Agrofood export", price: 195, minOrder: 20, payment: "50% предоплата", slug: "agrofood" },
+];
 
 export default function Prices({ t }) {
   const navigate = useNavigate();
@@ -31,7 +48,7 @@ export default function Prices({ t }) {
     (async () => {
       setLoading(true);
       try {
-        // Determine user role once
+        // Attempt to determine user and role
         let user = null;
         try {
           const { data: userData } = await supabase.auth.getUser();
@@ -56,7 +73,7 @@ export default function Prices({ t }) {
         if (!mounted) return;
         setIsAdmin(admin);
 
-        // Query factories (minimal payload). NOTE: we request only price field for factory_prices to reduce response size.
+        // Query factories (include only price in nested factory_prices to reduce payload)
         let query = supabase
           .from("factories")
           .select("id, name, slug, city, published, min_order, payment_terms, factory_prices(id, price, currency)");
@@ -68,6 +85,7 @@ export default function Prices({ t }) {
         if (mounted && Array.isArray(data) && data.length > 0) {
           setFactories(data);
         } else {
+          // keep factories empty so normalizedData will fall back to static data
           setFactories([]);
         }
       } catch (err) {
@@ -121,7 +139,12 @@ export default function Prices({ t }) {
     };
   }, []);
 
-  /* rest of component (normalization, render) is unchanged — you can keep your existing code below */
+  // Responsive listener
+  useEffect(() => {
+    const handleResize = () => setIsMobile(typeof window !== "undefined" ? window.innerWidth < 768 : false);
+    if (typeof window !== "undefined") window.addEventListener("resize", handleResize);
+    return () => { if (typeof window !== "undefined") window.removeEventListener("resize", handleResize); };
+  }, []);
 
   // Prepare data for UI: prefer DB factories, otherwise static
   const normalizedData = useMemo(() => {
@@ -153,8 +176,6 @@ export default function Prices({ t }) {
     }));
   }, [factories]);
 
-  /* ... remaining code (render, styles) stays exactly as in your original file ... */
-}
   // City options from normalizedData
   const cityOptions = useMemo(() => {
     const cities = [...new Set(normalizedData.map(r => r.city || "—"))];
@@ -260,7 +281,7 @@ export default function Prices({ t }) {
             <div style={filterGroupStyle}>
               <label style={labelStyle}><FaChartLine /> {t?.prices?.filters ?? "Sort"}:</label>
               <div style={selectWrapperStyle}>
-                <select style={selectStyle} value={sort.field} onChange={e => setSort(prev => ({ ...prev, field: e.target.value }))}>
+                <select style={selectStyle} value={sort.field} onChange={(e) => setSort(prev => ({ ...prev, field: e.target.value }))}>
                   <option value="dap">{t?.prices?.dap ?? "DAP"}</option>
                   <option value="price">{t?.prices?.warehouse ?? "Price"}</option>
                 </select>
