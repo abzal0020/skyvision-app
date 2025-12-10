@@ -12,23 +12,24 @@ export function AuthProvider({ children }) {
     let mounted = true;
     (async () => {
       try {
+        // Быстро получаем session (локальная проверка, быстрее, чем remote getUser)
         const { data: sessionData } = await supabase.auth.getSession();
         const u = sessionData?.session?.user ?? null;
         if (!mounted) return;
         setUser(u);
-        // помечаем loading false как можно раньше, профиль загрузим в фоне
+        // Не держим UI в loading — профиль загрузим в фоне
         setLoading(false);
 
         if (u) {
+          // Запрашиваем ТОЛЬКО role (display_name убран, потому что его нет)
           try {
-            // Запрашиваем ТОЛЬКО роль — display_name убран, потому что его нет в таблице
             const { data: p, error } = await supabase
               .from('profiles')
-              .select('role') // <-- было 'role,display_name'
+              .select('role')
               .eq('id', u.id)
               .maybeSingle();
             if (!mounted) return;
-            if (!error) setProfile(p);
+            if (!error) setProfile(p ?? null);
           } catch (err) {
             console.warn('Failed to load profile (async):', err);
           }
@@ -52,10 +53,10 @@ export function AuthProvider({ children }) {
         try {
           const { data: p, error } = await supabase
             .from('profiles')
-            .select('role') // <-- также здесь
+            .select('role')
             .eq('id', u.id)
             .maybeSingle();
-          if (!error) setProfile(p);
+          if (!error) setProfile(p ?? null);
         } catch (err) {
           console.warn('Profile load after auth change failed:', err);
         }
