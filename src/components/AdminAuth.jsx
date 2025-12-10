@@ -5,7 +5,6 @@ import { useAuth } from '../context/AuthContext';
 export default function AdminAuth({ onAuthChange }) {
   const { user, profile, loading } = useAuth();
 
-  // локальное состояние для формы входа
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [signing, setSigning] = useState(false);
@@ -48,7 +47,6 @@ export default function AdminAuth({ onAuthChange }) {
   }
 
   if (user) {
-    // безопасный вывод имени: сначала profile.display_name (если появится позже), иначе user.email, иначе id
     const nameLabel = (profile && profile.display_name) || user.email || user.id;
     return (
       <div style={{ marginBottom: 12, display: 'flex', gap: 12, alignItems: 'center' }}>
