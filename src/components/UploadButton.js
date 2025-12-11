@@ -1,5 +1,4 @@
-// src/components/UploadButton.js
-// Простой React компонент для загрузки файла через ваш серверный endpoint /api/admin/upload
+// src/components/UploadButton.js (diagnostic)
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 
@@ -12,7 +11,6 @@ export default function UploadButton({ factoryId, onUploaded }) {
 
     setLoading(true);
     try {
-      // Получаем access token текущей сессии
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       if (!token) {
@@ -28,26 +26,23 @@ export default function UploadButton({ factoryId, onUploaded }) {
 
       const res = await fetch('/api/admin/upload', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: form
       });
 
-      const json = await res.json();
-      if (!res.ok) {
-        console.error('Upload error', json);
-        alert('Ошибка загрузки: ' + (json?.error || JSON.stringify(json)));
-        setLoading(false);
-        return;
+      const text = await res.text();
+      // Показываем HTTP статус и начало ответа — скопируй и пришли мне:
+      alert('HTTP ' + res.status + '\\n' + text.slice(0, 4000));
+      // Пытаемся распарсить JSON и вернуть media
+      try {
+        const json = JSON.parse(text);
+        if (res.ok) onUploaded && onUploaded(json.media);
+      } catch (err) {
+        console.error('Response not JSON:', text);
       }
-
-      // json.media — объект записи в factory_media
-      onUploaded && onUploaded(json.media);
-      alert('Файл загружен успешно');
     } catch (err) {
       console.error(err);
-      alert('Ошибка: ' + err.message);
+      alert('Ошибка запроса: ' + (err?.message || err));
     } finally {
       setLoading(false);
     }
