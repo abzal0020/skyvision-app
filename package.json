@@ -17,6 +17,7 @@
     "web-vitals": "^2.1.4",
     "@supabase/supabase-js": "^2.26.0",
     "busboy": "^1.6.0",
+    "formidable": "^2.0.1",
     "uuid": "^9.0.0"
   },
   "scripts": {
