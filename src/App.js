@@ -23,6 +23,8 @@ import Footer from "./components/Footer";
 import FloatingWhatsApp from "./components/FloatingWhatsApp";
 import "./App.css";
 import { locales } from "./locales";
+import UploadButton from './components/UploadButton';
+import { supabase } from './lib/supabase';
 
 // добавляем импорт админской страницы
 import FactoryDetail from "./pages/admin/FactoryDetail";
@@ -38,6 +40,26 @@ function slugifyFactoryName(name = "") {
     .replace(/\s+/g, "-")
     .replace(/[^\w\-]/g, "");
 }
+
+// ---- Тестовый компонент загрузки (вставьте сюда) ----
+function UploadTest() {
+  // Реальный factoryId (Best Kostanay) — подставлен ваш id
+  const factoryId = '8050ebb9-12f5-4eb4-852a-b1045165efc3';
+
+  const handleUploaded = (media) => {
+    console.log('Uploaded media:', media);
+    alert('Файл загружен. media.id: ' + (media?.id || 'нет id'));
+  };
+
+  return (
+    <div style={{ padding: 20 }}>
+      <h2>Admin upload test — Best Kostanay</h2>
+      <p>Factory ID: {factoryId}</p>
+      <UploadButton factoryId={factoryId} onUploaded={handleUploaded} />
+    </div>
+  );
+}
+// ---- конец UploadTest ----
 
 function Home({ t, openModal }) {
   const services = [
@@ -183,6 +205,8 @@ function App() {
             {/* <-- Добавленный маршрут для админки */}
             <Route path="/admin/factories" element={<FactoriesPage />} />
             <Route path="/admin/factories/:id" element={<FactoryDetail />} />
+            {/* Тестовая страница для загрузки */}
+            <Route path="/admin/upload-test" element={<UploadTest />} />
           </Routes>
         </main>
 
