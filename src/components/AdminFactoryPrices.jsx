@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient'; // используем тот же клиент, что в проекте
-import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '../lib/supabase'; // в проекте встречается ../lib/supabase
 
 export default function AdminFactoryPrices({ factoryId, userId }) {
   const [isAdmin, setIsAdmin] = useState(null);
   const [prices, setPrices] = useState([]);
   const [form, setForm] = useState({ price: '', currency: 'USD', unit: '', min_qty: 1, note: '' });
-  const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState(null);
 
   useEffect(() => {
     if (!userId) { setIsAdmin(false); return; }
+    let mounted = true;
     (async () => {
       try {
         const { data, error } = await supabase
@@ -19,16 +19,19 @@ export default function AdminFactoryPrices({ factoryId, userId }) {
           .eq('id', userId)
           .single();
         if (error) throw error;
+        if (!mounted) return;
         setIsAdmin(data?.role === 'admin');
       } catch (err) {
-        console.error('profiles.role check failed', err);
+        console.error('Failed to load profile role', err);
         setIsAdmin(false);
       }
     })();
+    return () => { mounted = false; };
   }, [userId]);
 
   useEffect(() => {
     if (!factoryId) return;
+    let mounted = true;
     (async () => {
       try {
         const { data, error } = await supabase
@@ -37,12 +40,14 @@ export default function AdminFactoryPrices({ factoryId, userId }) {
           .eq('factory_id', factoryId)
           .order('created_at', { ascending: false });
         if (error) throw error;
+        if (!mounted) return;
         setPrices(data || []);
       } catch (err) {
-        console.warn('load prices error', err);
+        console.warn('Failed to load prices', err);
         setPrices([]);
       }
     })();
+    return () => { mounted = false; };
   }, [factoryId]);
 
   const createPrice = async () => {
@@ -52,7 +57,6 @@ export default function AdminFactoryPrices({ factoryId, userId }) {
     setLoading(true);
     try {
       const payload = {
-        id: uuidv4(),
         factory_id: factoryId,
         price: Number(form.price),
         currency: form.currency || 'USD',
@@ -84,7 +88,6 @@ export default function AdminFactoryPrices({ factoryId, userId }) {
         .update(updated)
         .eq('id', id);
       if (error) throw error;
-      // обновить локально
       setPrices(prev => prev.map(p => p.id === id ? { ...p, ...updated } : p));
       setStatus('Обновлено');
     } catch (err) {
@@ -94,7 +97,7 @@ export default function AdminFactoryPrices({ factoryId, userId }) {
   };
 
   const deletePrice = async (id) => {
-    if (!confirm('Удалить прайс?')) return;
+    if (!window.confirm('Удалить прайс?')) return;
     try {
       const { error } = await supabase.from('factory_prices').delete().eq('id', id);
       if (error) throw error;
@@ -112,11 +115,13 @@ export default function AdminFactoryPrices({ factoryId, userId }) {
   return (
     <div>
       <h3>Prices (Admin)</h3>
+
       <div style={{ maxWidth: 560, padding: 12, border: '1px solid #eee', borderRadius: 6 }}>
         <div style={{ marginBottom: 8 }}>
           <label>Price</label><br />
           <input type="number" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} />
         </div>
+
         <div style={{ display: 'flex', gap: 8 }}>
           <div style={{ flex: 1 }}>
             <label>Currency</label><br />
@@ -127,14 +132,17 @@ export default function AdminFactoryPrices({ factoryId, userId }) {
             <input type="number" value={form.min_qty} onChange={e => setForm({ ...form, min_qty: e.target.value })} />
           </div>
         </div>
+
         <div style={{ marginTop: 8 }}>
           <label>Unit</label><br />
           <input value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })} />
         </div>
+
         <div style={{ marginTop: 8 }}>
           <label>Note</label><br />
           <textarea value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} />
         </div>
+
         <div style={{ marginTop: 10 }}>
           <button onClick={createPrice} disabled={loading}>{loading ? 'Sending...' : 'Create price'}</button>
           {status && <span style={{ marginLeft: 10 }}>{status}</span>}
@@ -146,11 +154,21 @@ export default function AdminFactoryPrices({ factoryId, userId }) {
         <ul>
           {prices.map(p => (
             <li key={p.id} style={{ marginBottom: 8 }}>
-              <input style={{ width: 120 }} value={p.price ?? ''} onChange={e => {
-                const val = e.target.value; setPrices(prev => prev.map(x => x.id === p.id ? { ...x, price: val } : x));
-              }} />
-              <input style={{ width: 80, marginLeft: 8 }} value={p.currency || ''} onChange={e => setPrices(prev => prev.map(x => x.id === p.id ? { ...x, currency: e.target.value } : x))} />
-              <input style={{ width: 120, marginLeft: 8 }} value={p.note || ''} onChange={e => setPrices(prev => prev.map(x => x.id === p.id ? { ...x, note: e.target.value } : x))} />
+              <input
+                style={{ width: 100 }}
+                value={p.price ?? ''}
+                onChange={e => setPrices(prev => prev.map(x => x.id === p.id ? { ...x, price: e.target.value } : x))}
+              />
+              <input
+                style={{ width: 80, marginLeft: 8 }}
+                value={p.currency || ''}
+                onChange={e => setPrices(prev => prev.map(x => x.id === p.id ? { ...x, currency: e.target.value } : x))}
+              />
+              <input
+                style={{ width: 200, marginLeft: 8 }}
+                value={p.note || ''}
+                onChange={e => setPrices(prev => prev.map(x => x.id === p.id ? { ...x, note: e.target.value } : x))}
+              />
               <button onClick={() => updatePrice(p.id, { price: Number(p.price), currency: p.currency, note: p.note })} style={{ marginLeft: 8 }}>Update</button>
               <button onClick={() => deletePrice(p.id)} style={{ marginLeft: 8 }}>Delete</button>
             </li>
