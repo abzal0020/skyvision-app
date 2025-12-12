@@ -1,22 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient'; // адаптируй путь
+import { supabase } from '../lib/supabase'; // совпадает с другими файлами в проекте
 
-type Price = {
-  id?: string;
-  price: number;
-  currency?: string;
-  unit?: string;
-  min_qty?: number;
-  note?: string;
-  created_by?: string;
-};
-
-export default function AdminFactoryPrices({ factoryId, userId }: { factoryId: string; userId: string }) {
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [prices, setPrices] = useState<Price[]>([]);
-  const [form, setForm] = useState<Partial<Price>>({});
+export default function AdminFactoryPrices({ factoryId, userId }) {
+  const [isAdmin, setIsAdmin] = useState(null);
+  const [prices, setPrices] = useState([]);
+  const [form, setForm] = useState({ price: '', currency: 'USD', unit: '', min_qty: 1, note: '' });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState(null);
 
   useEffect(() => {
     if (!userId) {
@@ -26,15 +16,15 @@ export default function AdminFactoryPrices({ factoryId, userId }: { factoryId: s
     let mounted = true;
     (async () => {
       try {
-        const { data, error: e } = await supabase
+        const { data, error } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', userId)
           .single();
-        if (e) throw e;
+        if (error) throw error;
         if (!mounted) return;
         setIsAdmin(data?.role === 'admin');
-      } catch (err: any) {
+      } catch (err) {
         console.error('Failed to load profile role', err);
         setIsAdmin(false);
       }
@@ -47,70 +37,103 @@ export default function AdminFactoryPrices({ factoryId, userId }: { factoryId: s
     (async () => {
       try {
         const res = await fetch(`/api/admin/factories/${factoryId}/prices`);
-        if (!res.ok) return;
+        if (!res.ok) {
+          // do not treat as fatal — maybe not admin
+          return;
+        }
         const json = await res.json();
-        setPrices(json);
-      } catch (e) { /* ignore */ }
+        setPrices(json || []);
+      } catch (e) {
+        console.warn('Failed to fetch prices', e);
+      }
     })();
   }, [factoryId]);
 
   const submit = async () => {
-    setError(null);
-    if (!isAdmin) { setError('Нет прав'); return; }
+    setStatus(null);
+    if (!isAdmin) { setStatus('Нет прав'); return; }
     setLoading(true);
     try {
+      const payload = {
+        price: Number(form.price),
+        currency: form.currency,
+        unit: form.unit,
+        min_qty: Number(form.min_qty),
+        note: form.note
+      };
+
       const res = await fetch(`/api/admin/factories/${factoryId}/prices`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, created_by: userId }),
+        body: JSON.stringify(payload)
       });
+
       if (!res.ok) {
         const txt = await res.text();
         throw new Error(`Server ${res.status}: ${txt}`);
       }
+
       const created = await res.json();
       setPrices(prev => [created, ...prev]);
-      setForm({});
-    } catch (err: any) {
+      setForm({ price: '', currency: 'USD', unit: '', min_qty: 1, note: '' });
+      setStatus('Создано');
+    } catch (err) {
       console.error(err);
-      setError(err.message || 'Ошибка');
+      setStatus('Ошибка: ' + (err.message || err));
     } finally {
       setLoading(false);
     }
   };
 
-  if (isAdmin === null) return <div>Loading...</div>;
+  if (isAdmin === null) return <div>Загрузка...</div>;
+
+  if (!isAdmin) return <div>У вас нет прав добавлять цены.</div>;
 
   return (
     <div>
-      <h3>Prices</h3>
-      {isAdmin ? (
-        <div>
-          <div style={{ maxWidth: 520 }}>
-            <label>Price</label>
-            <input type="number" value={form.price ?? ''} onChange={e => setForm({...form, price: Number(e.target.value)})} />
-            <label>Currency</label>
-            <input value={form.currency ?? 'USD'} onChange={e => setForm({...form, currency: e.target.value})} />
-            <label>Unit</label>
-            <input value={form.unit ?? ''} onChange={e => setForm({...form, unit: e.target.value})} />
-            <label>Min qty</label>
-            <input type="number" value={form.min_qty ?? 1} onChange={e => setForm({...form, min_qty: Number(e.target.value)})} />
-            <label>Note</label>
-            <textarea value={form.note ?? ''} onChange={e => setForm({...form, note: e.target.value})} />
-            <div>
-              <button onClick={submit} disabled={loading}>Create price</button>
-              {error && <div style={{color:'red'}}>{error}</div>}
-            </div>
+      <h3>Prices (Admin)</h3>
+
+      <div style={{ maxWidth: 560, padding: 8, border: '1px solid #eee', borderRadius: 6 }}>
+        <div style={{ marginBottom: 8 }}>
+          <label style={{ fontSize: 13 }}>Price</label><br />
+          <input type="number" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} />
+        </div>
+
+        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+          <div style={{ flex: 1 }}>
+            <label style={{ fontSize: 13 }}>Currency</label><br />
+            <input value={form.currency} onChange={e => setForm({ ...form, currency: e.target.value })} />
+          </div>
+          <div style={{ width: 120 }}>
+            <label style={{ fontSize: 13 }}>Min qty</label><br />
+            <input type="number" value={form.min_qty} onChange={e => setForm({ ...form, min_qty: e.target.value })} />
           </div>
         </div>
-      ) : (
-        <div>У вас нет прав добавлять цены.</div>
-      )}
 
-      <div>
+        <div style={{ marginBottom: 8 }}>
+          <label style={{ fontSize: 13 }}>Unit</label><br />
+          <input value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })} />
+        </div>
+
+        <div style={{ marginBottom: 8 }}>
+          <label style={{ fontSize: 13 }}>Note</label><br />
+          <textarea value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} />
+        </div>
+
+        <div style={{ marginTop: 8 }}>
+          <button onClick={submit} disabled={loading} style={{ padding: '8px 12px' }}>
+            {loading ? 'Sending...' : 'Create price'}
+          </button>
+          {status && <span style={{ marginLeft: 10 }}>{status}</span>}
+        </div>
+      </div>
+
+      <div style={{ marginTop: 12 }}>
         <h4>Existing</h4>
         <ul>
-          {prices.map(p => <li key={p.id}>{p.price} {p.currency} — {p.note}</li>)}
+          {prices.map(p => (
+            <li key={p.id || Math.random()}>{p.price} {p.currency} — {p.note}</li>
+          ))}
         </ul>
       </div>
     </div>
