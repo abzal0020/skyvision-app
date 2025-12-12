@@ -43,100 +43,95 @@ export default function Prices({ t }) {
   const [isAdmin, setIsAdmin] = useState(false);
 
   // Load factories from Supabase and determine role
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      setLoading(true);
+  const fetchFactories = async () => {
+    setLoading(true);
+    try {
+      // Attempt to determine user and role
+      let user = null;
       try {
-        // Attempt to determine user and role
-        let user = null;
-        try {
-          const { data: userData } = await supabase.auth.getUser();
-          user = userData?.user ?? null;
-        } catch (e) {
-          user = null;
-        }
-
-        let admin = false;
-        if (user) {
-          try {
-            const { data: profile, error: profErr } = await supabase
-              .from("profiles")
-              .select("role")
-              .eq("id", user.id)
-              .single();
-            if (!profErr && profile?.role === "admin") admin = true;
-          } catch (e) {
-            admin = false;
-          }
-        }
-        if (!mounted) return;
-        setIsAdmin(admin);
-
-        // Query factories (include only price in nested factory_prices to reduce payload)
-        let query = supabase
-          .from("factories")
-          .select("id, name, slug, city, published, min_order, payment_terms, factory_prices(id, price, currency)");
-
-        if (!admin) query = query.eq("published", true);
-
-        const { data, error } = await query.order("name", { ascending: true });
-        if (error) throw error;
-        if (mounted && Array.isArray(data) && data.length > 0) {
-          setFactories(data);
-        } else {
-          // keep factories empty so normalizedData will fall back to static data
-          setFactories([]);
-        }
-      } catch (err) {
-        console.error("Failed to load factories:", err);
-        if (mounted) setFactories([]);
-      } finally {
-        if (mounted) setLoading(false);
+        const userRes = await supabase.auth.getUser();
+        user = userRes?.data?.user ?? null;
+      } catch (e) {
+        user = null;
       }
-    })();
-    return () => { mounted = false; };
+
+      let admin = false;
+      if (user) {
+        try {
+          const { data: profile, error: profErr } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", user.id)
+            .single();
+          if (!profErr && profile?.role === "admin") admin = true;
+        } catch (e) {
+          admin = false;
+        }
+      }
+      setIsAdmin(admin);
+
+      // Query factories (include nested factory_prices with created_at)
+      let query = supabase
+        .from("factories")
+        .select("id, name, slug, city, published, min_order, payment_terms, factory_prices(id, price, currency, unit, min_qty, note, created_at)")
+        .order("name", { ascending: true });
+
+      if (!admin) query = query.eq("published", true);
+
+      const { data, error } = await query;
+      if (error) throw error;
+      if (Array.isArray(data) && data.length > 0) {
+        setFactories(data);
+      } else {
+        setFactories([]);
+      }
+    } catch (err) {
+      console.error("Failed to load factories:", err);
+      setFactories([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchFactories();
   }, []);
 
-  // Realtime subscription: INSERT / UPDATE / DELETE for factories
+  // Realtime: subscribe to factory changes AND to factory_prices changes to refresh list when prices are added/updated/deleted
   useEffect(() => {
-    const channel = supabase
+    // subscribe factories (existing)
+    const ch1 = supabase
       .channel('public:factories')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'factories' },
+        { event: '*', schema: 'public', table: 'factories' },
         (payload) => {
-          const newFactory = payload.new;
-          setFactories(prev => {
-            if (!prev) return [newFactory];
-            if (prev.some(p => p.id === newFactory.id)) {
-              return prev.map(p => p.id === newFactory.id ? newFactory : p);
-            }
-            return [newFactory, ...prev];
-          });
+          // Re-fetch full list to get nested prices in sync
+          fetchFactories();
         }
       )
+      .subscribe()
+      .catch(e => console.warn('subscribe factories failed', e));
+
+    // subscribe factory_prices (important to refresh prices)
+    const ch2 = supabase
+      .channel('public:factory_prices')
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'factories' },
+        { event: '*', schema: 'public', table: 'factory_prices' },
         (payload) => {
-          const updated = payload.new;
-          setFactories(prev => prev.map(p => p.id === updated.id ? { ...p, ...updated } : p));
+          // on any change to prices, refresh list
+          fetchFactories();
         }
       )
-      .on(
-        'postgres_changes',
-        { event: 'DELETE', schema: 'public', table: 'factories' },
-        (payload) => {
-          const removed = payload.old;
-          setFactories(prev => prev.filter(p => p.id !== removed.id));
-        }
-      )
-      .subscribe();
+      .subscribe()
+      .catch(e => console.warn('subscribe factory_prices failed', e));
 
     return () => {
-      supabase.removeChannel(channel);
+      try { supabase.removeChannel(ch1); } catch (e) { /* ignore */ }
+      try { supabase.removeChannel(ch2); } catch (e) { /* ignore */ }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Responsive listener
@@ -150,7 +145,9 @@ export default function Prices({ t }) {
   const normalizedData = useMemo(() => {
     if (factories && factories.length > 0) {
       return factories.map(f => {
-        const priceRec = (f.factory_prices && f.factory_prices.length > 0) ? f.factory_prices[0] : null;
+        const priceRec = (f.factory_prices && f.factory_prices.length > 0)
+          ? [...f.factory_prices].sort((a,b) => new Date(b.created_at) - new Date(a.created_at))[0]
+          : null;
         return {
           id: f.id,
           city: f.city || "—",
@@ -159,7 +156,8 @@ export default function Prices({ t }) {
           price: priceRec ? (priceRec.price ?? 0) : 0,
           currency: priceRec ? (priceRec.currency ?? "") : "",
           minOrder: f.min_order ?? 20,
-          payment: f.payment_terms ?? "50% предоплата"
+          payment: f.payment_terms ?? "50% предоплата",
+          note: priceRec ? (priceRec.note || "") : ""
         };
       });
     }
@@ -172,7 +170,8 @@ export default function Prices({ t }) {
       price: s.price,
       currency: "USD",
       minOrder: s.minOrder,
-      payment: s.payment
+      payment: s.payment,
+      note: ""
     }));
   }, [factories]);
 
@@ -432,6 +431,7 @@ export default function Prices({ t }) {
 }
 
 /* --- стили (одна декларация) --- */
+/* (styles unchanged — keep as in your file) */
 const pageStyle = {
   background: "linear-gradient(to bottom, #f8f9fa, #e9ecef)",
   minHeight: "100vh",
