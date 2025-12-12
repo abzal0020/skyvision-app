@@ -42,11 +42,11 @@ export default function Prices({ t }) {
   const [showFilters, setShowFilters] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Load factories from Supabase and determine role
+  // Fetch factories including nested factory_prices (safe: use factory_prices(*))
   const fetchFactories = async () => {
     setLoading(true);
     try {
-      // Attempt to determine user and role
+      // determine user role (optional, to include unpublished)
       let user = null;
       try {
         const userRes = await supabase.auth.getUser();
@@ -70,10 +70,10 @@ export default function Prices({ t }) {
       }
       setIsAdmin(admin);
 
-      // Query factories (include nested factory_prices with created_at)
+      // select factories and include all actual columns from factory_prices
       let query = supabase
         .from("factories")
-        .select("id, name, slug, city, published, min_order, payment_terms, factory_prices(id, price, currency, unit, min_qty, note, created_at)")
+        .select("id, name, slug, city, published, min_order, payment_terms, factory_prices(*)")
         .order("name", { ascending: true });
 
       if (!admin) query = query.eq("published", true);
@@ -95,41 +95,69 @@ export default function Prices({ t }) {
 
   useEffect(() => {
     fetchFactories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Realtime: subscribe to factory changes AND to factory_prices changes to refresh list when prices are added/updated/deleted
+  // Realtime + polling fallback: refresh on factory or factory_prices changes
   useEffect(() => {
-    // subscribe factories (existing)
-    const ch1 = supabase
-      .channel('public:factories')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'factories' },
-        (payload) => {
-          // Re-fetch full list to get nested prices in sync
-          fetchFactories();
-        }
-      )
-      .subscribe()
-      .catch(e => console.warn('subscribe factories failed', e));
+    let chFactories = null;
+    let chPrices = null;
+    let polling = null;
+    let mounted = true;
 
-    // subscribe factory_prices (important to refresh prices)
-    const ch2 = supabase
-      .channel('public:factory_prices')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'factory_prices' },
-        (payload) => {
-          // on any change to prices, refresh list
-          fetchFactories();
+    const safeFetch = async () => {
+      try {
+        await fetchFactories();
+      } catch (e) {
+        // ignore
+      }
+    };
+
+    (async () => {
+      try {
+        // factories channel
+        try {
+          chFactories = supabase
+            .channel("public:factories")
+            .on("postgres_changes", { event: "*", schema: "public", table: "factories" }, () => {
+              if (mounted) safeFetch();
+            })
+            .subscribe();
+        } catch (e) {
+          chFactories = null;
         }
-      )
-      .subscribe()
-      .catch(e => console.warn('subscribe factory_prices failed', e));
+
+        // factory_prices channel
+        try {
+          chPrices = supabase
+            .channel("public:factory_prices")
+            .on("postgres_changes", { event: "*", schema: "public", table: "factory_prices" }, () => {
+              if (mounted) safeFetch();
+            })
+            .subscribe();
+        } catch (e) {
+          chPrices = null;
+        }
+
+        // if realtime not established, use polling fallback
+        const subscribeWorks = chFactories || chPrices;
+        if (!subscribeWorks) {
+          polling = setInterval(() => {
+            if (mounted) safeFetch();
+          }, 10000); // every 10s
+        }
+      } catch (err) {
+        polling = setInterval(() => {
+          if (mounted) safeFetch();
+        }, 10000);
+      }
+    })();
 
     return () => {
-      try { supabase.removeChannel(ch1); } catch (e) { /* ignore */ }
-      try { supabase.removeChannel(ch2); } catch (e) { /* ignore */ }
+      mounted = false;
+      if (polling) clearInterval(polling);
+      try { if (chFactories) supabase.removeChannel(chFactories); } catch (e) { /* ignore */ }
+      try { if (chPrices) supabase.removeChannel(chPrices); } catch (e) { /* ignore */ }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -145,9 +173,17 @@ export default function Prices({ t }) {
   const normalizedData = useMemo(() => {
     if (factories && factories.length > 0) {
       return factories.map(f => {
-        const priceRec = (f.factory_prices && f.factory_prices.length > 0)
-          ? [...f.factory_prices].sort((a,b) => new Date(b.created_at) - new Date(a.created_at))[0]
-          : null;
+        // pick the most recent price if created_at exists, otherwise first
+        let priceRec = null;
+        if (Array.isArray(f.factory_prices) && f.factory_prices.length > 0) {
+          const withDates = f.factory_prices.filter(p => p && p.created_at);
+          if (withDates.length > 0) {
+            priceRec = [...withDates].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+          } else {
+            priceRec = f.factory_prices[0];
+          }
+        }
+
         return {
           id: f.id,
           city: f.city || "—",
