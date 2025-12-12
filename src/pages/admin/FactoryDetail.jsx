@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import UploadButton from '../../components/UploadButton';
+import AdminFactoryPrices from '../../components/AdminFactoryPrices';
 
 export default function FactoryDetailAdmin() {
   const { id } = useParams(); // предполагается маршрут /admin/factories/:id
@@ -11,12 +12,28 @@ export default function FactoryDetailAdmin() {
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState({});
   const [tab, setTab] = useState('info'); // info / media / prices / docs
+  const [sessionUser, setSessionUser] = useState(null);
 
   useEffect(() => {
     if (!id) return;
     fetchData();
     // eslint-disable-next-line
   }, [id]);
+
+  // get current user session (so we can pass userId to AdminFactoryPrices)
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        // supabase v1/v2 returns data.session.user or data.user depending on version
+        const user = data?.session?.user || data?.user || null;
+        setSessionUser(user);
+      } catch (e) {
+        console.warn('Failed to get session user', e);
+        setSessionUser(null);
+      }
+    })();
+  }, []);
 
   async function getToken() {
     const { data } = await supabase.auth.getSession();
@@ -173,13 +190,15 @@ export default function FactoryDetailAdmin() {
 
       {tab === 'prices' && (
         <div>
-          <p>Prices модуль — можно добавить создание/редактирование прайсов (можю прислать шаблон).</p>
+          {/* Render admin prices UI (component will check profiles.role by userId) */}
+          <AdminFactoryPrices factoryId={id} userId={sessionUser?.id} />
         </div>
       )}
 
       {tab === 'docs' && (
         <div>
-          <p>Documents — список загруженных документов и возможность загрузки/удаления.</p>
+          <p>Документы завода</p>
+          {/* Здесь можно отобразить список документов и управление ими */}
         </div>
       )}
     </div>
