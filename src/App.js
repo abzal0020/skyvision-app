@@ -25,6 +25,7 @@ import "./App.css";
 import { locales } from "./locales";
 import UploadButton from './components/UploadButton';
 import { supabase } from './lib/supabase';
+import FactoryPage from './pages/FactoryPage';
 
 // добавляем импорт админской страницы
 import FactoryDetail from "./pages/admin/FactoryDetail";
@@ -207,6 +208,7 @@ function App() {
             <Route path="/admin/factories/:id" element={<FactoryDetail />} />
             {/* Тестовая страница для загрузки */}
             <Route path="/admin/upload-test" element={<UploadTest />} />
+              <Route path="/factory/:slug" element={<FactoryPage />} />
           </Routes>
         </main>
 
