@@ -42,7 +42,7 @@ export default async function handler(req, res) {
   try {
     const { id } = req.query;
     const authHeader = req.headers.authorization || '';
-    const token = authHeader.split(' ')[1];
+    const token = (authHeader.split && authHeader.split(' ')[1]) || null;
     if (!token) return res.status(401).json({ error: 'No token provided' });
 
     const uid = await getAdminUid(token);
@@ -97,7 +97,24 @@ export default async function handler(req, res) {
       if (typeof body === 'string') {
         try { body = JSON.parse(body); } catch (e) { /* ignore */ }
       }
-      const allowed = ['name','description','address','phone','email','slug','featured_media_id'];
+
+      // Разрешаем обновлять поля, которые реально используются в форме админки
+      const allowed = [
+        'name',
+        'description',
+        'address',
+        'phone',
+        'email',
+        'slug',
+        'featured_media_id',
+        // Добавлены разрешённые поля
+        'published',
+        'min_order',
+        'payment_terms',
+        'logistics',
+        'city'
+      ];
+
       const payload = {};
       for (const k of allowed) if (k in body) payload[k] = body[k];
 
