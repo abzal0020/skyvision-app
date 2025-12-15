@@ -1,4 +1,4 @@
-// api/admin/upload.js — версия на formidable (вставь целиком)
+// api/admin/upload.js
 const fs = require('fs');
 const pathModule = require('path');
 const formidable = require('formidable');
@@ -14,11 +14,11 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
 
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-function getPublicUrlFromStorage(storageRes) {
-  if (!storageRes) return null;
-  if (storageRes.publicURL) return storageRes.publicURL;
-  if (storageRes.data && storageRes.data.publicUrl) return storageRes.data.publicUrl;
-  if (storageRes.data && storageRes.data.publicURL) return storageRes.data.publicURL;
+// helper to extract public url from different supabase SDK shapes
+function extractPublicUrl(resp) {
+  if (!resp) return null;
+  if (resp.publicURL) return resp.publicURL; // older shapes
+  if (resp.data && (resp.data.publicUrl || resp.data.publicURL)) return resp.data.publicUrl || resp.data.publicURL;
   return null;
 }
 
@@ -33,7 +33,7 @@ export default async function handler(req, res) {
     const token = (authHeader.split(' ')[1]) || null;
     if (!token) return res.status(401).json({ error: 'No token provided' });
 
-    // Проверка админа
+    // Проверка админа (попытка через admin client)
     let uid = null;
     try {
       const getUserRes = await supabaseAdmin.auth.getUser(token);
@@ -86,7 +86,7 @@ export default async function handler(req, res) {
         const factoryId = fields?.factoryId || fields?.factoryid || fields?.factory_id;
         if (!factoryId) return res.status(400).json({ error: 'factoryId required' });
 
-        // Найти файл
+        // Найти файл (поддерживаем разные имена)
         let fileObj = null;
         if (files) {
           if (files.file) fileObj = files.file;
@@ -112,7 +112,8 @@ export default async function handler(req, res) {
         const safeName = (filenameRaw || 'file').replace(/\s+/g, '_').replace(/[^\w.\-]/g, '');
         const storagePath = `factories/${factoryId}/${timestamp}_${safeName}`;
 
-        const { error: uploadError } = await supabaseAdmin.storage
+        // Загружаем в Supabase Storage
+        const { error: uploadError, data: uploadData } = await supabaseAdmin.storage
           .from(BUCKET)
           .upload(storagePath, fileBuffer, { contentType: mimeType });
 
@@ -121,15 +122,43 @@ export default async function handler(req, res) {
           return res.status(500).json({ error: 'Upload failed', details: uploadError });
         }
 
-        const publicRes = supabaseAdmin.storage.from(BUCKET).getPublicUrl(storagePath);
-        const publicURL = getPublicUrlFromStorage(publicRes);
+        // Попытка получить public URL
+        let publicURL = null;
+        try {
+          const publicRes = await supabaseAdmin.storage.from(BUCKET).getPublicUrl(storagePath);
+          publicURL = extractPublicUrl(publicRes);
+        } catch (e) {
+          console.warn('getPublicUrl failed', e);
+          publicURL = null;
+        }
 
+        // Если нет публичного URL (например бакет приватный) — создаём signed URL (временный)
+        let signedUrl = null;
+        try {
+          if (!publicURL) {
+            // 7 дней signed url
+            const expiresIn = 60 * 60 * 24 * 7;
+            const { data: signedData, error: signedErr } = await supabaseAdmin.storage
+              .from(BUCKET)
+              .createSignedUrl(storagePath, expiresIn);
+            if (!signedErr && signedData?.signedUrl) {
+              signedUrl = signedData.signedUrl;
+            } else if (signedErr) {
+              console.warn('createSignedUrl error', signedErr);
+            }
+          }
+        } catch (e) {
+          console.warn('createSignedUrl threw', e);
+        }
+
+        // Сохраняем запись в factory_media
         const meta = { size: fileBuffer.length, mimeType };
         const insertObj = {
           factory_id: factoryId,
           type: mimeType?.startsWith?.('image/') ? 'image' : 'document',
           storage_path: storagePath,
-          url: publicURL || null,
+          // store publicURL if available, otherwise signedUrl (so frontend can open)
+          url: publicURL || signedUrl || null,
           title: fields?.title || null,
           caption: fields?.caption || null,
           meta
@@ -149,14 +178,19 @@ export default async function handler(req, res) {
         // Удаляем временный файл
         try { fs.unlinkSync(tempPath); } catch (e) { /* ignore */ }
 
-        return res.status(200).json({ media: insertData });
+        // Возвращаем информацию о сохранённом файле, включая url и signedUrl (если есть)
+        return res.status(200).json({
+          media: insertData,
+          publicURL: publicURL || null,
+          signedUrl: (!publicURL && signedUrl) ? signedUrl : null
+        });
       } catch (e) {
         console.error('Processing error (formidable)', e);
         return res.status(500).json({ error: 'Internal error: ' + String(e?.message || e) });
       }
     });
 
-    // Важное: не возвращаем ответ здесь — ответ отправится в callback form.parse
+    // Ответ отправляется в callback form.parse
     return;
   } catch (err) {
     console.error('upload handler fatal error', err);
