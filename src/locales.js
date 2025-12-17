@@ -10,7 +10,7 @@ export const locales = {
       title: "Международные грузоперевозки",
       subtitle: "Надежные решения для вашего бизнеса",
       request: "Оставить заявку",
-      phone: "8 (747) 165-40-92"
+      phone: "+7 771 525 2683"
     },
     services: {
       title: "НАШИ УСЛУГИ",
@@ -93,7 +93,7 @@ export const locales = {
       title: "国际货运物流",
       subtitle: "为您的业务提供可靠的解决方案",
       request: "提交申请",
-      phone: "8 (747) 165-40-92"
+      phone: "+7 771 525 2683"
     },
     services: {
       title: "我们的服务",
