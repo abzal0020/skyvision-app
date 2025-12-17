@@ -5,8 +5,8 @@ import "./RequestModal.css";
 const EMAILJS_USER_ID = process.env.REACT_APP_EMAILJS_USER_ID || "5hS_rdfopL-fNCVzY";
 const EMAILJS_SERVICE_ID = process.env.REACT_APP_EMAILJS_SERVICE_ID || "service_mfs129i";
 const EMAILJS_TEMPLATE_ID = process.env.REACT_APP_EMAILJS_TEMPLATE_ID || "template_vixeuwf";
-// WhatsApp recipient: international format without plus, e.g. "77471654092"
-const WHATSAPP_NUMBER = process.env.REACT_APP_WHATSAPP_NUMBER || "77471654092";
+// WhatsApp recipient: international format without plus, e.g. "77715252683"
+const WHATSAPP_NUMBER = process.env.REACT_APP_WHATSAPP_NUMBER || "77715252683";
 
 /** форматирование телефона для отображения */
 function formatPhoneForDisplay(raw) {
