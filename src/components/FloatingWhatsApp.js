@@ -1,7 +1,7 @@
 import React from "react";
 import "./FloatingWhatsApp.css";
 
-const WHATSAPP_NUMBER = process.env.REACT_APP_WHATSAPP_NUMBER || "77471654092";
+const WHATSAPP_NUMBER = process.env.REACT_APP_WHATSAPP_NUMBER || "77715252683";
 
 const WA_ICON = (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden focusable="false" xmlns="http://www.w3.org/2000/svg">
