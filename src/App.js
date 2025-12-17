@@ -31,7 +31,7 @@ import FactoryPage from './pages/FactoryPage';
 import FactoryDetail from "./pages/admin/FactoryDetail";
 import FactoriesPage from "./pages/admin/FactoriesPage";
 
-const DEFAULT_TEL_HREF = "+77471654092";
+const DEFAULT_TEL_HREF = "+7 771 525 2683";
 
 function slugifyFactoryName(name = "") {
   return name
