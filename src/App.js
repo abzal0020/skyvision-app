@@ -38,7 +38,7 @@ function slugifyFactoryName(name = "") {
     .toLowerCase()
     .trim()
     .replace(/\s+/g, "-")
-    .replace(/[^\w-]/g, "");
+    .replace(/[^A-Za-z0-9_-]/g, "");
 }
 
 function HeaderAdminMenu({ lang }) {
@@ -108,7 +108,6 @@ function HeaderAdminMenu({ lang }) {
         className={`admin-trigger${user ? " signed-in" : ""}`}
         onClick={() => setOpen((current) => !current)}
         aria-expanded={open}
-        aria-haspopup="dialog"
       >
         <FaUserShield />
         <span>{loading ? labels.loading : user ? labels.admin : labels.login}</span>
