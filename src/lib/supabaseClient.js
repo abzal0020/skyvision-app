@@ -9,10 +9,12 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.warn('Supabase keys are not set');
 }
 
-let supabase;
-if (!global._supabase && typeof window !== 'undefined') {
-  global._supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabaseGlobal = globalThis;
+
+if (!supabaseGlobal._supabase) {
+  supabaseGlobal._supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
-supabase = global._supabase;
+
+const supabase = supabaseGlobal._supabase;
 
 export { supabase };
