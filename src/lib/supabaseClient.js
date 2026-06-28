@@ -1,5 +1,7 @@
 // lib/supabaseClient.js
 // Пример безопасной инициализации supabase клиента для браузера (anon key)
+
+/* global globalThis */
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
