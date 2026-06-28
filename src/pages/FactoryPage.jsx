@@ -2,7 +2,7 @@
 // Вставь поверх существующего файла или интегрируй правки в свой компонент
 
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import RequestModal from '../components/RequestModal';
 import { locales } from '../locales';
 import { supabase } from '../lib/supabaseClient';
