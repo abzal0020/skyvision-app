@@ -63,7 +63,7 @@ export function AuthProvider({ children }) {
       }
     })();
 
-    const { subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       const u = session?.user ?? null;
       setUser(u);
       if (!u) {
@@ -87,7 +87,7 @@ export function AuthProvider({ children }) {
 
     return () => {
       mounted = false;
-      subscription?.unsubscribe();
+      authListener?.subscription?.unsubscribe();
     };
   }, [fetchProfile]);
 
