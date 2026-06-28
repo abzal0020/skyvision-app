@@ -20,7 +20,7 @@ function makeSlug(s = '') {
     .toLowerCase()
     .trim()
     .replace(/\s+/g, '-')
-    .replace(/[^\w\-]/g, '');
+    .replace(/[^A-Za-z0-9_-]/g, '');
 }
 
 export default function FactoriesPage() {
