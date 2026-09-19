@@ -15,7 +15,7 @@
     "react-scripts": "5.0.1",
     "styled-components": "^6.1.19",
     "web-vitals": "^2.1.4",
-    "@supabase/supabase-js": "^2.26.0",
+    "@supabase/supabase-js": "2.116.0",
     "busboy": "^1.6.0",
     "formidable": "^2.0.1",
     "uuid": "^9.0.0"
@@ -43,5 +43,6 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  }
+  },
+  "packageManager": "pnpm@11.19.0"
 }
