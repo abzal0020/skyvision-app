@@ -26,11 +26,6 @@ export function AuthProvider({ children }) {
       // если есть ошибка - вернуть её наружу
       throw res.error;
     }
-    if (!res.data) {
-      // пробуем user_id
-      res = await tryGet('user_id');
-      if (res.error && res.error.code) throw res.error;
-    }
     return res.data ?? null;
   }, []);
 
