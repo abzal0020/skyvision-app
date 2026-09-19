@@ -1,4 +1,8 @@
 import React, { useState } from "react";
+import Portal from "./portal/Portal";
+import Marketplace from "./portal/Marketplace";
+import { CompanyProvider } from "./portal/CompanyContext";
+import useAdmin from "./catalog/useAdmin";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { FaSearch, FaPhone, FaUserShield } from "react-icons/fa";
 import Prices from "./catalog/Prices";
@@ -20,6 +24,7 @@ const DEFAULT_TEL_HREF = "+77715252683";
 
 function HeaderAdminMenu({ lang }) {
   const { user, profile, loading } = useAuth();
+  const { admin: isAdmin } = useAdmin();
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,8 +34,8 @@ function HeaderAdminMenu({ lang }) {
   const labels = lang === "zh"
     ? {
         login: "登录",
-        admin: "管理",
-        email: "管理员邮箱",
+        admin: "工作空间",
+        email: "Email",
         password: "密码",
         signing: "登录中...",
         submit: "登录",
@@ -41,8 +46,8 @@ function HeaderAdminMenu({ lang }) {
       }
     : {
         login: "Войти",
-        admin: "Админ",
-        email: "Email администратора",
+        admin: "Кабинет",
+        email: "Email",
         password: "Пароль",
         signing: "Входим...",
         submit: "Войти",
@@ -98,9 +103,8 @@ function HeaderAdminMenu({ lang }) {
                 <span>{userLabel}</span>
                 {profile?.role && <small>{profile.role}</small>}
               </div>
-              <Link className="admin-panel-link" to="/admin/factories" onClick={() => setOpen(false)}>
-                {labels.openPanel}
-              </Link>
+              <Link className="admin-panel-link" to="/portal" onClick={() => setOpen(false)}>{lang === "zh" ? "企业工作空间" : "Кабинет компании"}</Link>
+              {isAdmin && <Link className="admin-panel-link" to="/admin/factories" onClick={() => setOpen(false)}>{labels.openPanel}</Link>}
               <button type="button" className="admin-panel-secondary" onClick={handleSignOut}>
                 {labels.logout}
               </button>
@@ -125,6 +129,7 @@ function HeaderAdminMenu({ lang }) {
                 {signing ? labels.signing : labels.submit}
               </button>
               {message && <p className="admin-login-message">{message}</p>}
+              <Link to="/portal" onClick={() => setOpen(false)}>{lang === "zh" ? "注册 / 企业工作空间" : "Регистрация / кабинет компании"}</Link>
             </form>
           )}
         </div>
@@ -147,11 +152,13 @@ function App() {
 
   return (
     <Router>
+      <CompanyProvider>
       <div className="app-wrapper">
         <header>
           <Link to="/" className="logo">{t.logo}</Link>
           <nav className="nav">
             <Link to="/">{t.nav.main}</Link>
+            <Link to="/marketplace">{lang === "zh" ? "市场" : "Маркетплейс"}</Link>
             <Link to="/prices">{t.nav.prices}</Link>
             <Link to="/contact">{t.nav.contact}</Link>
           </nav>
@@ -185,6 +192,8 @@ function App() {
 
         <main className="main">
           <Routes>
+            <Route path="/portal/*" element={<Portal lang={lang} />} />
+            <Route path="/marketplace" element={<Marketplace lang={lang} />} />
             <Route path="/" element={<Home lang={lang} openModal={openModal} />} />
             <Route path="/prices" element={<Prices lang={lang} />} />
             <Route path="/contact" element={<Contact />} />
@@ -207,6 +216,7 @@ function App() {
           />
         )}
       </div>
+      </CompanyProvider>
     </Router>
   );
 }
