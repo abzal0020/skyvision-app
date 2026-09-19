@@ -72,7 +72,7 @@ export function AuthProvider({ children }) {
       }
       // при смене user — подтягиваем профиль
       setLoading(true);
-      fetchProfile(u.id)
+      setTimeout(() => fetchProfile(u.id)
         .then((p) => {
           if (mounted) setProfile(p);
         })
@@ -82,7 +82,7 @@ export function AuthProvider({ children }) {
         })
         .finally(() => {
           if (mounted) setLoading(false);
-        });
+        }), 0);
     });
 
     return () => {
