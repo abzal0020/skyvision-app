@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import Portal from "./portal/Portal";
+import Network from "./portal/Network";
+import Deals from "./portal/Deals";
+import CompanyPage from "./portal/CompanyPage";
 import Marketplace from "./portal/Marketplace";
 import { CompanyProvider } from "./portal/CompanyContext";
 import useAdmin from "./catalog/useAdmin";
@@ -103,6 +106,7 @@ function HeaderAdminMenu({ lang }) {
                 <span>{userLabel}</span>
                 {profile?.role && <small>{profile.role}</small>}
               </div>
+              <Link className="admin-panel-link" to="/network/me" onClick={() => setOpen(false)}>{lang === "zh" ? "我的资料与好友" : "Мой профиль и друзья"}</Link>
               <Link className="admin-panel-link" to="/portal" onClick={() => setOpen(false)}>{lang === "zh" ? "企业工作空间" : "Кабинет компании"}</Link>
               {isAdmin && <Link className="admin-panel-link" to="/admin/factories" onClick={() => setOpen(false)}>{labels.openPanel}</Link>}
               <button type="button" className="admin-panel-secondary" onClick={handleSignOut}>
@@ -160,6 +164,7 @@ function App() {
             <Link to="/">{t.nav.main}</Link>
             <Link to="/marketplace">{lang === "zh" ? "市场" : "Маркетплейс"}</Link>
             <Link to="/prices">{t.nav.prices}</Link>
+            <Link to="/network">{lang === "zh" ? "联系人" : "Люди"}</Link>
             <Link to="/contact">{t.nav.contact}</Link>
           </nav>
 
@@ -192,6 +197,9 @@ function App() {
 
         <main className="main">
           <Routes>
+            <Route path="/network/*" element={<Network lang={lang} />} />
+            <Route path="/deals/*" element={<Deals lang={lang} />} />
+            <Route path="/company/:id" element={<CompanyPage lang={lang} />} />
             <Route path="/portal/*" element={<Portal lang={lang} />} />
             <Route path="/marketplace" element={<Marketplace lang={lang} />} />
             <Route path="/" element={<Home lang={lang} openModal={openModal} />} />

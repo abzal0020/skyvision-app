@@ -1,0 +1,1 @@
+alter policy documents_read on public.sv_documents using(exists(select 1 from public.sv_deal_parties p where p.deal_id=sv_documents.deal_id and p.company_id=any(sv_documents.audience) and sv_private.role_in(p.company_id) is not null));

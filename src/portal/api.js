@@ -7,6 +7,10 @@ export async function result(query) {
 }
 
 export function errorText(error, zh = false) {
+  if (error?.message?.includes('CONFLICT')) return zh ? '内容已更新。请刷新后重试。' : 'Данные изменились. Обновите страницу и повторите действие.';
+  if (error?.message === 'INVALID_FILE') return zh ? '文件类型或大小不符合要求。' : 'Формат или размер файла не подходит. Проверьте ограничения поля загрузки.';
+  if (error?.message?.includes('INVALID_TRANSITION')) return zh ? '当前状态或角色不允许此操作。' : 'Это действие недоступно для текущего статуса или вашей компании.';
+  if (error?.message?.includes('SCAN_FORMAT')) return zh ? '扫描件格式：PDF、JPG 或 PNG。' : 'Подписанный скан должен быть в формате PDF, JPG или PNG.';
   if (error?.message?.includes('INVITE_INVALID')) return zh ? '邀请无效、已过期，或与登录邮箱不符。' : 'Приглашение недействительно, истекло или вы вошли с другим email.';
   if (error?.code === '42501') return zh ? '您没有执行此操作的权限。请刷新页面。' : 'Недостаточно прав. Обновите страницу — доступ мог измениться.';
   if (error?.code === '23505') return zh ? '此记录已存在。请刷新页面。' : 'Запись уже существует. Обновите страницу.';
