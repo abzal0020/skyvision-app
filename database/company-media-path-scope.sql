@@ -1,0 +1,1 @@
+alter policy sv_company_file_upload on storage.objects with check(bucket_id='skyvision-company' and exists(select 1 from public.sv_companies c where c.id::text=split_part(objects.name,'/',1) and sv_private.role_in(c.id) in ('owner','manager')));
