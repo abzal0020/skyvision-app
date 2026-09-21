@@ -29,10 +29,6 @@ function HeaderAdminMenu({ lang }) {
   const { user, profile, loading } = useAuth();
   const { admin: isAdmin } = useAdmin();
   const [open, setOpen] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [signing, setSigning] = useState(false);
-  const [message, setMessage] = useState("");
 
   const labels = lang === "zh"
     ? {
@@ -60,29 +56,12 @@ function HeaderAdminMenu({ lang }) {
         error: "Не удалось войти",
       };
 
-  const handleSignIn = async (event) => {
-    event.preventDefault();
-    setSigning(true);
-    setMessage("");
-
-    try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      setEmail("");
-      setPassword("");
-      setOpen(false);
-    } catch (error) {
-      setMessage(error?.message || labels.error);
-    } finally {
-      setSigning(false);
-    }
-  };
-
   const handleSignOut = async () => {
-    setMessage("");
     await supabase.auth.signOut();
     setOpen(false);
   };
+
+  if (!user) return <Link className="platform-entry" to="/portal">{lang === "zh" ? "登录平台" : "Войти в платформу"}</Link>;
 
   const userLabel = profile?.display_name || user?.email;
 
@@ -100,7 +79,7 @@ function HeaderAdminMenu({ lang }) {
 
       {open && (
         <div className="admin-panel" role="dialog" aria-label={labels.login}>
-          {user ? (
+          {(
             <>
               <div className="admin-panel-user">
                 <span>{userLabel}</span>
@@ -113,29 +92,8 @@ function HeaderAdminMenu({ lang }) {
                 {labels.logout}
               </button>
             </>
-          ) : (
-            <form className="admin-login-form" onSubmit={handleSignIn}>
-              <input
-                type="email"
-                placeholder={labels.email}
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                required
-              />
-              <input
-                type="password"
-                placeholder={labels.password}
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                required
-              />
-              <button type="submit" disabled={signing}>
-                {signing ? labels.signing : labels.submit}
-              </button>
-              {message && <p className="admin-login-message">{message}</p>}
-              <Link to="/portal" onClick={() => setOpen(false)}>{lang === "zh" ? "注册 / 企业工作空间" : "Регистрация / кабинет компании"}</Link>
-            </form>
           )}
+
         </div>
       )}
     </div>
@@ -143,6 +101,7 @@ function HeaderAdminMenu({ lang }) {
 }
 
 function App() {
+  const { user } = useAuth();
   const [lang, setLangState] = useState(() => { try { return localStorage.getItem("skyvision-language") === "zh" ? "zh" : "ru"; } catch { return "ru"; } });
   const setLang = (value) => { setLangState(value); document.documentElement.lang = value === "zh" ? "zh-CN" : "ru"; try { localStorage.setItem("skyvision-language", value); } catch {} };
   const [showModal, setShowModal] = useState(false);
@@ -162,9 +121,14 @@ function App() {
           <Link to="/" className="logo">{t.logo}</Link>
           <nav className="nav">
             <Link to="/">{t.nav.main}</Link>
-            <Link to="/marketplace">{lang === "zh" ? "市场" : "Маркетплейс"}</Link>
-            <Link to="/prices">{t.nav.prices}</Link>
-            <Link to="/network">{lang === "zh" ? "联系人" : "Люди"}</Link>
+            {user ? <>
+              <Link to="/marketplace">{lang === "zh" ? "市场" : "Маркетплейс"}</Link>
+              <Link to="/prices">{t.nav.prices}</Link>
+              <Link to="/network">{lang === "zh" ? "联系人" : "Люди"}</Link>
+            </> : <>
+              <a href="/#participants">{lang === "zh" ? "平台参与者" : "Для кого"}</a>
+              <a href="/#how-it-works">{lang === "zh" ? "使用流程" : "Как это работает"}</a>
+            </>}
             <Link to="/contact">{t.nav.contact}</Link>
           </nav>
 
@@ -174,9 +138,9 @@ function App() {
               <span>{t.hero.phone}</span>
             </a>
 
-            <Link to="/prices" className="search-btn" aria-label={lang === "zh" ? "搜索产品" : "Поиск продукции"}>
+            {user && <Link to="/prices" className="search-btn" aria-label={lang === "zh" ? "搜索产品" : "Поиск продукции"}>
               <FaSearch />
-            </Link>
+            </Link>}
 
             <div className="language-switcher" aria-label="Language switcher">
               <button
