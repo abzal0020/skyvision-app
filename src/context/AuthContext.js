@@ -31,57 +31,64 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let mounted = true;
+    let identity;
+    let generation = 0;
+    let authEventReceived = false;
+    const timers = new Set();
     setLoading(true);
 
-    (async () => {
-      try {
-        const {
-          data: { user: currentUser },
-        } = await supabase.auth.getUser();
-        if (!mounted) return;
-        setUser(currentUser ?? null);
-        if (currentUser) {
-          try {
-            const p = await fetchProfile(currentUser.id);
-            if (!mounted) return;
-            setProfile(p);
-          } catch (err) {
-            // логируем ошибку профиля, но не ломаем UX
+    const applyUser = (nextUser) => {
+      if (!mounted) return;
+      const nextIdentity = nextUser?.id ?? null;
+      setUser(nextUser ?? null);
+      // Supabase also emits SIGNED_IN when an existing tab regains focus.
+      // Only an identity change may replace the authenticated screen.
+      if (identity === nextIdentity) return;
+      identity = nextIdentity;
+      const request = ++generation;
+      setProfile(null);
+      setLoading(Boolean(nextUser));
+      if (!nextUser) return;
+
+      // Keep Supabase calls outside the synchronous auth callback.
+      const timer = setTimeout(async () => {
+        timers.delete(timer);
+        if (!mounted || request !== generation) return;
+        try {
+          const nextProfile = await fetchProfile(nextUser.id);
+          if (mounted && request === generation) setProfile(nextProfile);
+        } catch (err) {
+          if (mounted && request === generation) {
             console.error('fetchProfile error', err);
             setProfile(null);
           }
-        } else {
-          setProfile(null);
+        } finally {
+          if (mounted && request === generation) setLoading(false);
         }
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    })();
+      }, 0);
+      timers.add(timer);
+    };
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      const u = session?.user ?? null;
-      setUser(u);
-      if (!u) {
-        setProfile(null);
-        return;
-      }
-      // при смене user — подтягиваем профиль
-      setLoading(true);
-      setTimeout(() => fetchProfile(u.id)
-        .then((p) => {
-          if (mounted) setProfile(p);
-        })
-        .catch((err) => {
-          console.error('onAuthStateChange fetchProfile error', err);
-          if (mounted) setProfile(null);
-        })
-        .finally(() => {
-          if (mounted) setLoading(false);
-        }), 0);
+      authEventReceived = true;
+      applyUser(session?.user ?? null);
     });
+
+    supabase.auth.getUser()
+      .then(({ data }) => {
+        if (!authEventReceived) applyUser(data?.user ?? null);
+      })
+      .catch((err) => {
+        if (mounted && !authEventReceived) {
+          console.error('getUser error', err);
+          applyUser(null);
+        }
+      });
 
     return () => {
       mounted = false;
+      ++generation;
+      timers.forEach(clearTimeout);
       authListener?.subscription?.unsubscribe();
     };
   }, [fetchProfile]);
