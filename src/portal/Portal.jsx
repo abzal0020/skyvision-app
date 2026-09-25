@@ -5,6 +5,9 @@ import { useAuth } from '../context/AuthContext';
 import { useCompany } from './CompanyContext';
 import { canEdit, errorText, listingName, listingPrice, result, saveListing } from './api';
 import './portal.css';
+import Account from './Account';
+import {businessTypes, registrationDefaults} from './registration';
+export {Account};
 
 export function useLoad(loader, deps) {
   const [state, setState] = useState({ data: null, loading: true, error: null });
@@ -23,32 +26,11 @@ export function Empty({ title, text, children }) { return <div className="sp-emp
 const statusLabel = (s, zh) => ({ draft: zh ? '草稿' : 'Черновик', published: zh ? '已发布' : 'Опубликовано', archived: zh ? '归档' : 'В архиве', new: zh ? '新申请' : 'Новая', discussing: zh ? '洽谈中' : 'Обсуждение', closed: zh ? '已关闭' : 'Закрыта' }[s]);
 const roleLabel = (s, zh) => ({ owner: zh ? '所有者' : 'Владелец', manager: zh ? '经理' : 'Менеджер', viewer: zh ? '只读' : 'Просмотр' }[s]);
 
-export function Account({ zh }) {
-  const [mode, setMode] = useState('login');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
-  async function submit(e) {
-    e.preventDefault(); setBusy(true); setError(''); setNotice('');
-    const fields = new FormData(e.currentTarget);
-    const email = String(fields.get('email')).trim();
-    const password = String(fields.get('password'));
-    try {
-      const response = mode === 'signup'
-        ? await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/portal` } })
-        : await supabase.auth.signInWithPassword({ email, password });
-      if (response.error) throw response.error;
-      if (mode === 'signup' && !response.data.session) setNotice(zh ? '请查看邮箱并确认注册，然后登录。' : 'Проверьте почту и подтвердите регистрацию, затем войдите в кабинет.');
-    } catch (err) {
-      setError(mode === 'login' ? (zh ? '无法登录。请检查邮箱、密码及邮箱确认状态。' : 'Не удалось войти. Проверьте email, пароль и подтверждение почты.') : (zh ? '无法注册。请检查邮箱和密码，或稍后重试。' : 'Не удалось зарегистрироваться. Проверьте email и пароль или повторите позже.'));
-    } finally { setBusy(false); }
-  }
-  return <div className="sv sp"><section className="sv-card sp-auth"><span className="sv-eyebrow">SKYVISION PORTAL</span><h1>{zh ? '个人工作空间' : 'Личный кабинет'}</h1><p className="sv-muted">{zh ? '管理产品、物流报价、申请和商务沟通。' : 'Личный профиль, друзья, переписка и работа от имени компании.'}</p><div className="sv-tabs">{['login', 'signup'].map(v => <button key={v} className={mode === v ? 'active' : ''} onClick={() => { setMode(v); setError(''); setNotice(''); }}>{v === 'login' ? (zh ? '登录' : 'Вход') : (zh ? '注册' : 'Регистрация')}</button>)}</div><form onSubmit={submit}><label>Email<input name="email" type="email" autoComplete="email" required maxLength={254} /></label><label>{zh ? '密码' : 'Пароль'}<input name="password" type="password" autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} minLength={mode === 'signup' ? 10 : 1} required />{mode === 'signup' && <small>{zh ? '至少10个字符' : 'Не менее 10 символов'}</small>}</label><button disabled={busy}>{busy ? (zh ? '请稍候…' : 'Подождите…') : mode === 'login' ? (zh ? '登录' : 'Войти') : (zh ? '创建账户' : 'Создать аккаунт')}</button>{error && <p className="sv-error" role="alert">{error}</p>}{notice && <p className="sv-success" role="status">{notice}</p>}</form><p><Link to="/marketplace">{zh ? '浏览市场' : 'Посмотреть объявления'} →</Link></p></section></div>;
-}
 
 function CompanyForm({ zh, existing, onDone }) {
   const ctx = useCompany();
-  const [values, setValues] = useState(existing || { name: '', name_zh: '', city: '', country: 'KZ', activities: ['factory'] });
+  const {user} = useAuth();
+  const [values, setValues] = useState(existing || (ctx.memberships.length ? {name:'',name_zh:'',city:'',country:'KZ',activities:['factory']} : registrationDefaults(user)));
   const [busy, setBusy] = useState(false); const [error, setError] = useState(null);
   const set = (key, value) => setValues(v => ({ ...v, [key]: value }));
   async function submit(e) {
@@ -59,7 +41,7 @@ function CompanyForm({ zh, existing, onDone }) {
       await ctx.reload(); ctx.select(row.id); onDone?.();
     } catch (err) { setError(err); } finally { setBusy(false); }
   }
-  return <form onSubmit={submit} className="sv-card"><h2>{existing ? (zh ? '企业资料' : 'Данные компании') : (zh ? '添加企业' : 'Добавить компанию')}</h2><p className="sv-muted">{zh ? '这些信息将与您发布的广告一起展示。添加资料不代表平台认证。' : 'Эти данные будут видны вместе с опубликованными объявлениями. Создание профиля не означает проверку компании площадкой.'}</p><div className="sp-fields"><label>{zh ? '公司名称（俄文或原文）' : 'Название компании'}<input required minLength={2} maxLength={160} value={values.name} onChange={e => set('name', e.target.value)} /></label><label>{zh ? '中文名称（可选）' : 'Название на китайском — необязательно'}<input maxLength={160} value={values.name_zh} onChange={e => set('name_zh', e.target.value)} /></label><label>{zh ? '国家' : 'Страна'}<select value={values.country} onChange={e => set('country', e.target.value)}>{[['KZ', zh ? '哈萨克斯坦' : 'Казахстан'], ['CN', zh ? '中国' : 'Китай'], ['UZ', zh ? '乌兹别克斯坦' : 'Узбекистан'], ['KG', zh ? '吉尔吉斯斯坦' : 'Кыргызстан'], ['RU', zh ? '俄罗斯' : 'Россия'], ['OTHER', zh ? '其他' : 'Другая']].map(([v, label]) => <option key={v} value={v}>{label}</option>)}</select></label><label>{zh ? '城市' : 'Город'}<input value={values.city} maxLength={120} onChange={e => set('city', e.target.value)} /></label></div><fieldset><legend>{zh ? '业务类型' : 'Направления работы'}</legend><div className="sp-role">{[['factory', zh ? '工厂' : 'Завод'], ['forwarder', zh ? '货运代理' : 'Экспедитор'], ['buyer', zh ? '采购商' : 'Покупатель']].map(([key, label]) => <label key={key}><input type="checkbox" checked={values.activities.includes(key)} onChange={e => set('activities', e.target.checked ? [...values.activities, key] : values.activities.filter(k => k !== key))} />{label}</label>)}</div></fieldset><Feedback error={error} zh={zh} /><button disabled={busy || !values.activities.length}>{busy ? '…' : existing ? (zh ? '保存' : 'Сохранить') : (zh ? '创建企业' : 'Создать компанию')}</button></form>;
+  return <form onSubmit={submit} className="sv-card"><h2>{existing ? (zh ? '企业资料' : 'Данные компании') : (zh ? '添加企业' : 'Добавить компанию')}</h2><p className="sv-muted">{zh ? '这些信息将与您发布的广告一起展示。添加资料不代表平台认证。' : 'Эти данные будут видны вместе с опубликованными объявлениями. Создание профиля не означает проверку компании площадкой.'}</p><div className="sp-fields"><label>{zh ? '公司名称（俄文或原文）' : 'Название компании'}<input required minLength={2} maxLength={160} value={values.name} onChange={e => set('name', e.target.value)} /></label><label>{zh ? '中文名称（可选）' : 'Название на китайском — необязательно'}<input maxLength={160} value={values.name_zh} onChange={e => set('name_zh', e.target.value)} /></label><label>{zh ? '国家' : 'Страна'}<select value={values.country} onChange={e => set('country', e.target.value)}>{[['KZ', zh ? '哈萨克斯坦' : 'Казахстан'], ['CN', zh ? '中国' : 'Китай'], ['UZ', zh ? '乌兹别克斯坦' : 'Узбекистан'], ['KG', zh ? '吉尔吉斯斯坦' : 'Кыргызстан'], ['RU', zh ? '俄罗斯' : 'Россия'], ['OTHER', zh ? '其他' : 'Другая']].map(([v, label]) => <option key={v} value={v}>{label}</option>)}</select></label><label>{zh ? '城市' : 'Город'}<input value={values.city} maxLength={120} onChange={e => set('city', e.target.value)} /></label></div><fieldset><legend>{zh ? '业务类型' : 'Направления работы'}</legend><div className="sp-role">{businessTypes(zh).map(([key, label]) => <label key={key}><input type="checkbox" checked={values.activities.includes(key)} onChange={e => set('activities', e.target.checked ? [...values.activities, key] : values.activities.filter(k => k !== key))} />{label}</label>)}</div></fieldset><Feedback error={error} zh={zh} /><button disabled={busy || !values.activities.length}>{busy ? '…' : existing ? (zh ? '保存' : 'Сохранить') : (zh ? '创建企业' : 'Создать компанию')}</button></form>;
 }
 
 function Invitation({ token, zh, onDone }) {
