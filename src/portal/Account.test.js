@@ -2,6 +2,7 @@ import {render,screen,fireEvent,waitFor} from '@testing-library/react';
 import Account from './Account';
 import {supabase} from '../lib/supabaseClient';
 import {registrationDefaults} from './registration';
+jest.mock('react-router-dom',()=>({Link:({to,children})=><a href={to}>{children}</a>}));
 jest.mock('../lib/supabaseClient',()=>({supabase:{auth:{signUp:jest.fn(),signInWithPassword:jest.fn()}}}));
 beforeEach(()=>{jest.clearAllMocks();supabase.auth.signUp.mockResolvedValue({data:{session:null},error:null});});
 function fillForm(){
@@ -19,7 +20,7 @@ test('registration saves business type and company/contact data for use after em
  expect(payload.options.data.registration).toEqual({version:1,business_type:'other',company_name:'Test company',country:'CN',city:'Shanghai',full_name:'Test User',phone:'+861234567890',position:'Manager'});
  expect(payload.options.data.registration).not.toHaveProperty('password');
  expect(registrationDefaults({user_metadata:payload.options.data})).toEqual({name:'Test company',name_zh:'',country:'CN',city:'Shanghai',activities:['other'],full_name:'Test User',headline:'Manager'});
- expect(await screen.findByRole('status')).toHaveTextContent('подтвердите email');
+ expect(await screen.findByRole('status')).toHaveTextContent('восстановите его');
 });
 test('password mismatch does not submit registration and keeps fields',()=>{
  render(<Account zh={false}/>);fillForm();

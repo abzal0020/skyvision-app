@@ -29,7 +29,7 @@ const assert=require('assert/strict');
   for(const [name,value] of [['company_name','QA Company'],['city','Shanghai'],['full_name','QA Person'],['position','Manager'],['phone','+861234567890'],['email','qa@example.com'],['password','ExamplePassword123'],['confirm_password','ExamplePassword123']]) await page.locator(`[name="${name}"]`).fill(value);
   await page.locator('[name="country"]').selectOption('CN');
   await page.getByRole('button',{name:'Создать аккаунт',exact:true}).click();
-  await page.getByRole('status').filter({hasText:'подтвердите email'}).waitFor();
+  await page.getByRole('status').filter({hasText:'восстановите его'}).waitFor();
   assert.equal(submitted.data.registration.business_type,'other');
   assert.equal(submitted.data.registration.company_name,'QA Company');
   assert.equal(submitted.data.registration.phone,'+861234567890');

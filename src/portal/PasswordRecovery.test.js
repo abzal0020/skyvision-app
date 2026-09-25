@@ -1,0 +1,34 @@
+import {render,screen,fireEvent,waitFor} from '@testing-library/react';
+import PasswordRecovery from './PasswordRecovery';
+import {useAuth} from '../context/AuthContext';
+import {supabase} from '../lib/supabaseClient';
+jest.mock('react-router-dom',()=>({Link:({to,children,...props})=><a href={to} {...props}>{children}</a>}));
+jest.mock('../context/AuthContext',()=>({useAuth:jest.fn()}));
+jest.mock('../lib/supabaseClient',()=>({supabase:{auth:{resetPasswordForEmail:jest.fn(),updateUser:jest.fn()}}}));
+beforeEach(()=>{jest.clearAllMocks();useAuth.mockReturnValue({user:null,loading:false,finishRecovery:jest.fn()});});
+test('recovery sends email with a portal redirect and reports failures accurately',async()=>{
+ supabase.auth.resetPasswordForEmail.mockResolvedValue({error:{status:429}});
+ render(<PasswordRecovery lang="ru"/>);
+ fireEvent.change(screen.getByLabelText('Email'),{target:{value:'test@example.com'}});
+ fireEvent.click(screen.getByRole('button',{name:'Отправить ссылку'}));
+ expect(await screen.findByRole('alert')).toHaveTextContent('Слишком много');
+ expect(screen.queryByRole('status')).not.toBeInTheDocument();
+ expect(supabase.auth.resetPasswordForEmail).toHaveBeenCalledWith('test@example.com',{redirectTo:`${window.location.origin}/portal`});
+});
+test('authenticated recovery validates and saves the new password',async()=>{
+ const finishRecovery=jest.fn();
+ useAuth.mockReturnValue({user:{email:'test@example.com'},loading:false,finishRecovery});
+ supabase.auth.updateUser.mockResolvedValue({error:null});
+ render(<PasswordRecovery lang="ru"/>);
+ fireEvent.change(screen.getByLabelText('Новый пароль'),{target:{value:'NewPassword123'}});
+ fireEvent.change(screen.getByLabelText('Повторите пароль'),{target:{value:'Mismatch12345'}});
+ fireEvent.click(screen.getByRole('button',{name:'Сохранить пароль'}));
+ expect(screen.getByRole('alert')).toHaveTextContent('Пароли не совпадают');
+ expect(supabase.auth.updateUser).not.toHaveBeenCalled();
+ fireEvent.change(screen.getByLabelText('Повторите пароль'),{target:{value:'NewPassword123'}});
+ fireEvent.click(screen.getByRole('button',{name:'Сохранить пароль'}));
+ await waitFor(()=>expect(screen.getByRole('status')).toHaveTextContent('Пароль обновлён'));
+ expect(supabase.auth.updateUser).toHaveBeenCalledWith({password:'NewPassword123'});
+ fireEvent.click(screen.getByRole('link',{name:'Перейти в кабинет'}));
+ expect(finishRecovery).toHaveBeenCalledTimes(1);
+});

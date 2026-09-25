@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Portal from "./portal/Portal";
+import PasswordRecovery from "./portal/PasswordRecovery";
 import Network from "./portal/Network";
 import Deals from "./portal/Deals";
 import CompanyPage from "./portal/CompanyPage";
@@ -101,7 +102,7 @@ function HeaderAdminMenu({ lang }) {
 }
 
 function App() {
-  const { user } = useAuth();
+  const { user, recovering } = useAuth();
   const [lang, setLangState] = useState(() => { try { return localStorage.getItem("skyvision-language") === "zh" ? "zh" : "ru"; } catch { return "ru"; } });
   const setLang = (value) => { setLangState(value); document.documentElement.lang = value === "zh" ? "zh-CN" : "ru"; try { localStorage.setItem("skyvision-language", value); } catch {} };
   const [showModal, setShowModal] = useState(false);
@@ -161,7 +162,8 @@ function App() {
         </header>
 
         <main className="main">
-          <Routes>
+          {recovering ? <PasswordRecovery lang={lang} /> : <Routes>
+            <Route path="/reset-password" element={<PasswordRecovery lang={lang} />} />
             <Route path="/network/*" element={<Network lang={lang} />} />
             <Route path="/deals/*" element={<Deals lang={lang} />} />
             <Route path="/company/:id" element={<CompanyPage lang={lang} />} />
@@ -174,7 +176,7 @@ function App() {
 
             <Route path="/admin/factories" element={<FactoriesPage />} />
             <Route path="/admin/factories/:id" element={<FactoryDetail />} />
-          </Routes>
+          </Routes>}
         </main>
 
         <Footer t={t} />
