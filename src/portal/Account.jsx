@@ -1,4 +1,5 @@
 import React, {useState} from 'react';
+import {Link} from 'react-router-dom';
 import {supabase} from '../lib/supabaseClient';
 import {businessTypes, countries, registrationData} from './registration';
 import './registration.css';
@@ -28,7 +29,7 @@ export default function Account({zh}) {
         ? await supabase.auth.signUp({email,password,options:{emailRedirectTo:`${window.location.origin}/portal`,data:{registration}}})
         : await supabase.auth.signInWithPassword({email,password});
       if(response.error) throw response.error;
-      if(signup && !response.data.session) setNotice(zh?'请查收确认邮件。确认邮箱并登录后，您可以核对并创建企业资料。':'Проверьте почту и подтвердите email. После входа останется проверить данные и создать страницу компании.');
+      if(signup && !response.data.session) setNotice(zh?'新账户请查收确认邮件。如果您已有账户，请使用原密码登录或重置密码。':'Для нового аккаунта проверьте письмо подтверждения. Если вы уже регистрировались с этой почтой, войдите со старым паролем или восстановите его.');
     } catch(err) {
       setError(signup?(zh?'无法注册。请检查资料或稍后重试。':'Не удалось зарегистрироваться. Проверьте данные или попробуйте позже.'):(zh?'无法登录。请检查邮箱、密码及邮箱确认状态。':'Не удалось войти. Проверьте email, пароль и подтверждение почты.'));
     } finally {setBusy(false);}
@@ -57,5 +58,6 @@ export default function Account({zh}) {
       </fieldset>
       {error&&<p className="sv-error" role="alert">{error}</p>}{notice&&<p className="sv-success" role="status">{notice}</p>}
     </form>
+    <p><Link to="/reset-password">{zh?"忘记密码？":"Забыли пароль?"}</Link></p>
   </section></div>;
 }

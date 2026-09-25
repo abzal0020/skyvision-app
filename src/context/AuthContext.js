@@ -7,6 +7,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [recovering, setRecovering] = useState(false);
 
   // helper: try to load profile by a few possible keys (id or user_id)
   const fetchProfile = useCallback(async (userId) => {
@@ -71,6 +72,8 @@ export function AuthProvider({ children }) {
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       authEventReceived = true;
+      if (_event === 'PASSWORD_RECOVERY') setRecovering(true);
+      if (_event === 'SIGNED_OUT') setRecovering(false);
       applyUser(session?.user ?? null);
     });
 
@@ -93,7 +96,7 @@ export function AuthProvider({ children }) {
     };
   }, [fetchProfile]);
 
-  const value = { user, profile, loading };
+  const value = { user, profile, loading, recovering, finishRecovery: () => setRecovering(false) };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
