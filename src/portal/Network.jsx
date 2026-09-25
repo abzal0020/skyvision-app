@@ -6,6 +6,7 @@ import { result } from './api';
 import { Account, Empty, Feedback, Loading, useLoad } from './Portal';
 import { uploadFile } from './files';
 import './social.css';
+import {registrationDefaults} from './registration';
 
 export function Media({ bucket, path, kind = 'photo', label = '' }) {
   const [url, setUrl] = useState('');
@@ -27,7 +28,7 @@ function MyProfile({ zh }) {
   return <ProfileEditor zh={zh} profile={state.data} onDone={state.reload} />;
 }
 function ProfileEditor({ zh, profile, onDone }) {
-  const { user } = useAuth(); const [v, setV] = useState(profile || { full_name: '', headline: '', city: '', about: '', listed: true, avatar_path: '' });
+  const { user } = useAuth(); const [v, setV] = useState(profile || { full_name: registrationDefaults(user).full_name, headline: registrationDefaults(user).headline, city: registrationDefaults(user).city, about: '', listed: true, avatar_path: '' });
   const [photo, setPhoto] = useState(null); const [busy, setBusy] = useState(false); const [error, setError] = useState(null); const [saved, setSaved] = useState(false);
   const set = (key, val) => { setV(old => ({ ...old, [key]: val })); setSaved(false); };
   async function save(e) {

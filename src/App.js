@@ -61,7 +61,7 @@ function HeaderAdminMenu({ lang }) {
     setOpen(false);
   };
 
-  if (!user) return <Link className="platform-entry" to="/portal">{lang === "zh" ? "登录平台" : "Войти в платформу"}</Link>;
+  if (!user) return <Link className="platform-entry" to="/portal">{lang === "zh" ? "登录门户" : "Вход в портал"}</Link>;
 
   const userLabel = profile?.display_name || user?.email;
 
@@ -126,8 +126,9 @@ function App() {
               <Link to="/prices">{t.nav.prices}</Link>
               <Link to="/network">{lang === "zh" ? "联系人" : "Люди"}</Link>
             </> : <>
-              <a href="/#participants">{lang === "zh" ? "平台参与者" : "Для кого"}</a>
-              <a href="/#how-it-works">{lang === "zh" ? "使用流程" : "Как это работает"}</a>
+              <a href="/#about">{lang === "zh" ? "关于我们" : "О компании"}</a>
+              <a href="/#services">{lang === "zh" ? "业务方向" : "Направления"}</a>
+              <Link to="/prices">{t.nav.prices}</Link>
             </>}
             <Link to="/contact">{t.nav.contact}</Link>
           </nav>
